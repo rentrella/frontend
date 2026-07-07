@@ -528,7 +528,7 @@ export default function Home() {
           <section className="relative z-10 max-h-[calc(100vh-4rem)] w-full max-w-xl overflow-y-auto rounded-[31px] border border-[#e1e8f0] bg-white p-7 shadow-[0_24px_70px_rgba(17,23,40,0.22)]">
             <div className="flex items-start justify-between gap-6">
               <div>
-                <p className="text-[15px] font-black text-[#5daeea]">CONTACT</p>
+                <p className="text-[15px] font-black text-[#5daeea]">Rentrella</p>
                 <h2 className="mt-2 text-[34px] font-black tracking-[-0.04em]">
                   문의하기
                 </h2>
