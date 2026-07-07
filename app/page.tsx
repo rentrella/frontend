@@ -17,16 +17,16 @@ type WeatherState = {
 
 const initialUmbrellas: Umbrella[] = [
   { id: "01", available: true },
-  { id: "02", available: false },
+  { id: "02", available: true },
   { id: "03", available: true },
   { id: "04", available: true },
-  { id: "05", available: false },
+  { id: "05", available: true },
   { id: "06", available: true },
   { id: "07", available: true },
-  { id: "08", available: false },
+  { id: "08", available: true },
   { id: "09", available: true },
   { id: "10", available: true },
-  { id: "11", available: false },
+  { id: "11", available: true },
   { id: "12", available: true },
 ];
 
