@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Umbrella = {
@@ -39,6 +39,8 @@ const weatherLabels: Record<WeatherKind, string> = {
 };
 
 const RENTAL_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
+const authStorageKey = "rentrella-authenticated";
+const rememberStorageKey = "rentrella-remember-login";
 
 const sunnyBushes = [
   { left: 29, bottom: 18, size: 26, color: "#238f4f" },
@@ -341,6 +343,7 @@ function UmbrellaCard({
 }
 
 export default function Home() {
+  const router = useRouter();
   const [umbrellas, setUmbrellas] = useState(initialUmbrellas);
   const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);
   const [borrowedAt, setBorrowedAt] = useState<number | null>(null);
@@ -387,6 +390,23 @@ export default function Home() {
     setBorrowedAt(null);
     setMessage(`우산 #${id} 반납이 완료되었습니다.`);
   };
+
+  const logout = () => {
+    window.localStorage.removeItem(authStorageKey);
+    window.localStorage.removeItem(rememberStorageKey);
+    window.sessionStorage.removeItem(authStorageKey);
+    router.push("/");
+  };
+
+  useEffect(() => {
+    const authenticated =
+      window.localStorage.getItem(authStorageKey) === "true" ||
+      window.sessionStorage.getItem(authStorageKey) === "true";
+
+    if (!authenticated) {
+      router.replace("/");
+    }
+  }, [router]);
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNow(Date.now()), 60 * 1000);
@@ -489,12 +509,13 @@ export default function Home() {
               <ChatIcon />
               문의하기
             </button>
-            <Link
+            <button
               className="flex h-[46px] items-center rounded-full border border-[#dce6ef] bg-white px-6 text-[17px] font-black text-[#7f8da3]"
-              href="/"
+              onClick={logout}
+              type="button"
             >
               로그아웃
-            </Link>
+            </button>
           </div>
         </div>
       </header>

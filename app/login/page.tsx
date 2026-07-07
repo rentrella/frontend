@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AuthCard,
   AuthPage,
@@ -17,12 +17,26 @@ const temporaryAccount = {
   password: "sunwoo4114!",
 };
 
+const authStorageKey = "rentrella-authenticated";
+const rememberStorageKey = "rentrella-remember-login";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberLogin, setRememberLogin] = useState(false);
   const [loginError, setLoginError] = useState("");
   const canLogin = email.trim().length > 0 && password.trim().length > 0;
+
+  useEffect(() => {
+    const authenticated =
+      window.localStorage.getItem(authStorageKey) === "true" ||
+      window.sessionStorage.getItem(authStorageKey) === "true";
+
+    if (authenticated) {
+      router.replace("/main");
+    }
+  }, [router]);
 
   const submitLogin = () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -43,6 +57,14 @@ export default function LoginPage() {
     }
 
     setLoginError("");
+    window.sessionStorage.setItem(authStorageKey, "true");
+    if (rememberLogin) {
+      window.localStorage.setItem(authStorageKey, "true");
+      window.localStorage.setItem(rememberStorageKey, "true");
+    } else {
+      window.localStorage.removeItem(authStorageKey);
+      window.localStorage.removeItem(rememberStorageKey);
+    }
     router.push("/main");
   };
 
@@ -82,7 +104,12 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between text-[15px] font-bold">
             <label className="flex items-center gap-2 text-[#8c99ab]">
-              <input className="h-4 w-4 accent-[#6db6ed]" type="checkbox" />
+              <input
+                checked={rememberLogin}
+                className="h-4 w-4 accent-[#6db6ed]"
+                onChange={(event) => setRememberLogin(event.target.checked)}
+                type="checkbox"
+              />
               로그인 유지
             </label>
             <Link className="text-[#5daeea]" href="/reset-password">
