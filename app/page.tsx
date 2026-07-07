@@ -518,15 +518,14 @@ export default function Home() {
       </section>
 
       {isContactOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#111728]/35 px-4 pb-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111728]/35 px-4 py-8 backdrop-blur-sm">
           <button
             aria-label="문의하기 닫기"
             className="absolute inset-0 cursor-default"
             onClick={() => setIsContactOpen(false)}
             type="button"
           />
-          <section className="relative w-full max-w-2xl rounded-[31px] border border-[#e1e8f0] bg-white p-7 shadow-[0_24px_70px_rgba(17,23,40,0.22)]">
-            <div className="mx-auto mb-5 h-1.5 w-14 rounded-full bg-[#d8e2ec]" />
+          <section className="relative z-10 max-h-[calc(100vh-4rem)] w-full max-w-xl overflow-y-auto rounded-[31px] border border-[#e1e8f0] bg-white p-7 shadow-[0_24px_70px_rgba(17,23,40,0.22)]">
             <div className="flex items-start justify-between gap-6">
               <div>
                 <p className="text-[15px] font-black text-[#5daeea]">CONTACT</p>
@@ -546,31 +545,13 @@ export default function Home() {
               </button>
             </div>
 
-            <form className="mt-6 space-y-4">
-              <label className="block">
-                <span className="text-[14px] font-black text-[#59677d]">
-                  이름
-                </span>
-                <input
-                  className="mt-2 h-12 w-full rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
-                  placeholder="이름을 입력하세요"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[14px] font-black text-[#59677d]">
-                  연락처
-                </span>
-                <input
-                  className="mt-2 h-12 w-full rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
-                  placeholder="이메일 또는 전화번호"
-                />
-              </label>
+            <form className="mt-6 space-y-5">
               <label className="block">
                 <span className="text-[14px] font-black text-[#59677d]">
                   문의 내용
                 </span>
                 <textarea
-                  className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 py-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
+                  className="mt-2 min-h-40 w-full resize-none rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 py-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
                   placeholder="문의 내용을 입력하세요"
                 />
               </label>
