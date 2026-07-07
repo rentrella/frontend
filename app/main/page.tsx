@@ -38,6 +38,8 @@ const weatherLabels: Record<WeatherKind, string> = {
   cloudy: "흐림",
 };
 
+const RENTAL_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
+
 const sunnyBushes = [
   { left: 29, bottom: 18, size: 26, color: "#238f4f" },
   { left: 62, bottom: 17, size: 31, color: "#238f4f" },
@@ -243,12 +245,14 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
 function UmbrellaCard({
   borrowedByCurrentUser,
   disabledByUserLimit,
+  isOverdue,
   umbrella,
   onBorrow,
   onReturn,
 }: {
   borrowedByCurrentUser: boolean;
   disabledByUserLimit: boolean;
+  isOverdue: boolean;
   umbrella: Umbrella;
   onBorrow: () => void;
   onReturn: () => void;
@@ -269,27 +273,31 @@ function UmbrellaCard({
         <div
           className={[
             "flex h-[62px] w-[62px] items-center justify-center rounded-[17px]",
-            umbrella.available ? "bg-[#e3f1ff]" : "bg-[#eef3f9]",
+            umbrella.available || borrowedByCurrentUser ? "bg-[#e3f1ff]" : "bg-[#eef3f9]",
           ].join(" ")}
         >
-          <UmbrellaIcon muted={!umbrella.available} />
+          <UmbrellaIcon muted={!umbrella.available && !borrowedByCurrentUser} />
         </div>
         <span
           className={[
             "rounded-full px-5 py-2 text-[15px] font-black leading-none",
-            umbrella.available
-              ? "bg-[#e8f4ff] text-[#55aeee]"
-              : "bg-[#e4e9f1] text-[#96a1af]",
+            isOverdue
+              ? "bg-[#ffe8ea] text-[#ef5f67]"
+              : borrowedByCurrentUser
+                ? "bg-[#eaf8ef] text-[#2fa461]"
+                : umbrella.available
+                  ? "bg-[#e8f4ff] text-[#55aeee]"
+                  : "bg-[#e4e9f1] text-[#96a1af]",
           ].join(" ")}
         >
-          {borrowedByCurrentUser ? "반납하기" : canBorrow ? "빌리기" : "대여불가"}
+          {isOverdue ? "연체됨" : borrowedByCurrentUser ? "대여중" : umbrella.available ? "가능" : "빌려짐"}
         </span>
       </div>
 
       <h2
         className={[
           "mt-5 text-[24px] font-black leading-8 tracking-[-0.02em]",
-          umbrella.available ? "text-[#101527]" : "text-[#9aa5b8]",
+          umbrella.available || borrowedByCurrentUser ? "text-[#101527]" : "text-[#9aa5b8]",
         ].join(" ")}
       >
         우산 #{umbrella.id}
@@ -297,10 +305,14 @@ function UmbrellaCard({
       <p
         className={[
           "mt-1 text-[15px] font-medium",
-          umbrella.available ? "text-[#8996a8]" : "text-[#b1bbc8]",
+          isOverdue
+            ? "text-[#ef5f67]"
+            : umbrella.available || borrowedByCurrentUser
+              ? "text-[#8996a8]"
+              : "text-[#b1bbc8]",
         ].join(" ")}
       >
-        {umbrella.available ? "대여 가능" : "현재 대여 중"}
+        {isOverdue ? "대여기간 초과" : borrowedByCurrentUser ? "현재 대여 중 · 7일 대여" : umbrella.available ? "대여 가능" : "현재 대여 중"}
       </p>
 
       <button
@@ -314,7 +326,7 @@ function UmbrellaCard({
         onClick={borrowedByCurrentUser ? onReturn : onBorrow}
         type="button"
       >
-        {umbrella.available ? "빌리기" : "⊗  대여불가"}
+        {borrowedByCurrentUser ? "반납하기" : canBorrow ? "빌리기" : "대여불가"}
       </button>
     </article>
   );
@@ -322,7 +334,7 @@ function UmbrellaCard({
 
 export default function Home() {
   const [umbrellas, setUmbrellas] = useState(initialUmbrellas);
-  const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);
+  const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);\n  const [borrowedAt, setBorrowedAt] = useState<number | null>(null);\n  const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState("");
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [weather, setWeather] = useState<WeatherState>({
@@ -331,7 +343,7 @@ export default function Home() {
     temperature: null,
   });
 
-  const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;
+  const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;\n  const isBorrowedUmbrellaOverdue =\n    borrowedAt !== null && now - borrowedAt > RENTAL_PERIOD_MS;
 
   const borrowUmbrella = (id: string) => {
     if (borrowedUmbrellaId) {
@@ -344,7 +356,7 @@ export default function Home() {
         umbrella.id === id ? { ...umbrella, available: false } : umbrella,
       ),
     );
-    setBorrowedUmbrellaId(id);
+    setBorrowedUmbrellaId(id);\n    setBorrowedAt(Date.now());
     setMessage(`우산 #${id} 대여가 완료되었습니다.`);
   };
 
@@ -354,7 +366,7 @@ export default function Home() {
         umbrella.id === id ? { ...umbrella, available: true } : umbrella,
       ),
     );
-    setBorrowedUmbrellaId(null);
+    setBorrowedUmbrellaId(null);\n    setBorrowedAt(null);
     setMessage(`우산 #${id} 반납이 완료되었습니다.`);
   };
 
