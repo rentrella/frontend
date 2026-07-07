@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Umbrella = {
@@ -337,10 +338,6 @@ export default function Home() {
     setMessage(`우산 #${id} 대여가 완료되었습니다.`);
   };
 
-  const openInquiry = () => {
-    setMessage("문의가 접수되었습니다.");
-  };
-
   const previewWeather = (kind: WeatherKind) => {
     setWeather({
       kind,
@@ -435,19 +432,13 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="hidden items-center gap-8 text-[15px] font-black text-[#667085] md:flex">
-            <a href="#umbrellas">우산 목록</a>
-            <a href="#status">대여 현황</a>
-          </nav>
-
-          <button
+          <Link
             className="flex h-[46px] items-center gap-3 rounded-full border border-[#bfddf5] bg-[#e7f5ff] px-6 text-[17px] font-black text-[#5daeea]"
-            onClick={openInquiry}
-            type="button"
+            href="/contact"
           >
             <ChatIcon />
             문의하기
-          </button>
+          </Link>
         </div>
       </header>
 
