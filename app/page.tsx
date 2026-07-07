@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Umbrella = {
@@ -321,6 +320,7 @@ function UmbrellaCard({
 export default function Home() {
   const [umbrellas, setUmbrellas] = useState(initialUmbrellas);
   const [message, setMessage] = useState("");
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [weather, setWeather] = useState<WeatherState>({
     kind: "cloudy",
     label: "날씨 확인 중",
@@ -432,13 +432,14 @@ export default function Home() {
             </div>
           </div>
 
-          <Link
+          <button
             className="flex h-[46px] items-center gap-3 rounded-full border border-[#bfddf5] bg-[#e7f5ff] px-6 text-[17px] font-black text-[#5daeea]"
-            href="/contact"
+            onClick={() => setIsContactOpen(true)}
+            type="button"
           >
             <ChatIcon />
             문의하기
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -515,6 +516,78 @@ export default function Home() {
           </div>
         </section>
       </section>
+
+      {isContactOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#111728]/35 px-4 pb-4 backdrop-blur-sm">
+          <button
+            aria-label="문의하기 닫기"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setIsContactOpen(false)}
+            type="button"
+          />
+          <section className="relative w-full max-w-2xl rounded-[31px] border border-[#e1e8f0] bg-white p-7 shadow-[0_24px_70px_rgba(17,23,40,0.22)]">
+            <div className="mx-auto mb-5 h-1.5 w-14 rounded-full bg-[#d8e2ec]" />
+            <div className="flex items-start justify-between gap-6">
+              <div>
+                <p className="text-[15px] font-black text-[#5daeea]">CONTACT</p>
+                <h2 className="mt-2 text-[34px] font-black tracking-[-0.04em]">
+                  문의하기
+                </h2>
+                <p className="mt-2 text-[16px] font-medium leading-7 text-[#7a8797]">
+                  우산 대여, 반납, 서비스 이용 중 궁금한 내용을 남겨주세요.
+                </p>
+              </div>
+              <button
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f2f6fa] text-[22px] font-black text-[#7a8797]"
+                onClick={() => setIsContactOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="mt-6 space-y-4">
+              <label className="block">
+                <span className="text-[14px] font-black text-[#59677d]">
+                  이름
+                </span>
+                <input
+                  className="mt-2 h-12 w-full rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
+                  placeholder="이름을 입력하세요"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[14px] font-black text-[#59677d]">
+                  연락처
+                </span>
+                <input
+                  className="mt-2 h-12 w-full rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
+                  placeholder="이메일 또는 전화번호"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[14px] font-black text-[#59677d]">
+                  문의 내용
+                </span>
+                <textarea
+                  className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-[#dce6ef] bg-[#f9fbfd] px-4 py-4 text-[15px] font-medium outline-none focus:border-[#6db6ed]"
+                  placeholder="문의 내용을 입력하세요"
+                />
+              </label>
+              <button
+                className="w-full rounded-2xl bg-[#6db6ed] px-6 py-4 text-[17px] font-black text-white shadow-[0_9px_16px_rgba(109,182,237,0.22)]"
+                onClick={() => {
+                  setIsContactOpen(false);
+                  setMessage("문의가 접수되었습니다.");
+                }}
+                type="button"
+              >
+                문의 보내기
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
