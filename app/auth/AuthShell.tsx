@@ -25,14 +25,14 @@ export function AuthPage({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[#f7fbff] px-6 py-8 text-[#111728]">
-      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col">
+    <main className="min-h-screen bg-white px-8 py-8 text-[#111728] max-sm:px-5">
+      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl flex-col">
         <div className="flex justify-start">
           <AuthLogo />
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-10">
-          <div className="w-full max-w-3xl">{children}</div>
+        <div className="flex flex-1 items-center justify-center py-8">
+          <div className="w-full max-w-5xl">{children}</div>
         </div>
       </section>
     </main>
@@ -41,7 +41,7 @@ export function AuthPage({
 
 export function AuthCard({ children }: { children: ReactNode }) {
   return (
-    <section className="w-full rounded-[36px] border border-[#d5ecff] bg-white p-8 shadow-[0_24px_70px_rgba(33,75,120,0.08)] max-sm:p-6">
+    <section className="w-full rounded-[38px] border border-[#d5ecff] bg-white p-12 shadow-[0_24px_70px_rgba(33,75,120,0.08)] max-sm:p-6">
       {children}
     </section>
   );
@@ -61,10 +61,10 @@ export function Field({
   return (
     <label className="block">
       <span className="text-[15px] font-black text-[#7f8da3]">{label}</span>
-      <span className="mt-3 flex h-16 items-center gap-4 rounded-[19px] bg-[#f1f5fa] px-5 text-[#9aa8bb]">
+      <span className="mt-3 flex h-[74px] items-center gap-5 rounded-[22px] bg-[#f1f5fa] px-6 text-[#9aa8bb]">
         <span className="text-[#6db6ed]">{icon}</span>
         <input
-          className="min-w-0 flex-1 bg-transparent text-[18px] font-semibold text-[#111728] outline-none placeholder:text-[#9aa8bb]"
+          className="min-w-0 flex-1 bg-transparent text-[20px] font-semibold text-[#111728] outline-none placeholder:text-[#9aa8bb]"
           placeholder={placeholder}
           type={type}
         />
@@ -81,7 +81,7 @@ export function PrimaryButton({
   href?: string;
 }) {
   const className =
-    "flex h-16 w-full items-center justify-center rounded-[20px] bg-[#6db6ed] text-[20px] font-black text-white shadow-[0_14px_24px_rgba(109,182,237,0.28)]";
+    "flex h-[74px] w-full items-center justify-center rounded-[22px] bg-[#6db6ed] text-[22px] font-black text-white shadow-[0_14px_24px_rgba(109,182,237,0.28)]";
 
   if (href) {
     return (

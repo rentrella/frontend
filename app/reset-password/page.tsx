@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
           <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
             <Field icon={<MailIcon />} label="이메일" placeholder="example@email.com" type="email" />
             <button
-              className="h-16 rounded-[19px] bg-[#6db6ed] px-7 text-[17px] font-black text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
+              className="h-[74px] rounded-[22px] bg-[#6db6ed] px-8 text-[18px] font-black text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
               type="button"
             >
               인증코드 발송
@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
           <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
             <Field icon={<KeyIcon />} label="인증코드" placeholder="6자리 숫자 입력" />
             <button
-              className="h-16 rounded-[19px] bg-[#f2f6fa] px-10 text-[17px] font-black text-[#b8c2cf]"
+              className="h-[74px] rounded-[22px] bg-[#f2f6fa] px-12 text-[18px] font-black text-[#b8c2cf]"
               type="button"
             >
               확인
