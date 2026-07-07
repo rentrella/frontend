@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 export function AuthLogo() {
   return (
@@ -62,6 +65,9 @@ export function Field({
   title?: string;
   type?: string;
 }) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const isPassword = type === "password";
+
   return (
     <label className="block">
       <span className="text-[15px] font-black text-[#7f8da3]">{label}</span>
@@ -72,8 +78,18 @@ export function Field({
           pattern={pattern}
           placeholder={placeholder}
           title={title}
-          type={type}
+          type={isPassword && isPasswordVisible ? "text" : type}
         />
+        {isPassword && (
+          <button
+            aria-label={isPasswordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa8bb] hover:bg-white hover:text-[#6db6ed]"
+            onClick={() => setIsPasswordVisible((current) => !current)}
+            type="button"
+          >
+            <EyeIcon hidden={isPasswordVisible} />
+          </button>
+        )}
       </span>
     </label>
   );
@@ -192,6 +208,32 @@ export function KeyIcon() {
         strokeWidth="2"
       />
       <path d="M15.6 8.4h.1" stroke="currentColor" strokeLinecap="round" strokeWidth="3" />
+    </svg>
+  );
+}
+
+function EyeIcon({ hidden = false }: { hidden?: boolean }) {
+  return (
+    <svg aria-hidden="true" fill="none" height="24" viewBox="0 0 24 24" width="24">
+      <path
+        d="M3.8 12s2.9-5.2 8.2-5.2 8.2 5.2 8.2 5.2-2.9 5.2-8.2 5.2S3.8 12 3.8 12Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      {hidden && (
+        <path
+          d="M4.5 4.5 19.5 19.5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2"
+        />
+      )}
     </svg>
   );
 }
