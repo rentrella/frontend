@@ -19,6 +19,7 @@ export default function ResetPasswordPage() {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [hasSentCode, setHasSentCode] = useState(false);
   const [codeTimer, setCodeTimer] = useState(0);
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
   const passwordStrength = getPasswordStrength(newPassword);
@@ -47,6 +48,7 @@ export default function ResetPasswordPage() {
     }
 
     setEmailError("");
+    setHasSentCode(true);
     setCodeTimer(180);
   };
 
@@ -97,9 +99,32 @@ export default function ResetPasswordPage() {
               onClick={sendCode}
               type="button"
             >
-              {codeTimer > 0 ? `재발송 ${formatTimer(codeTimer)}` : "인증코드 발송"}
+              인증코드 발송
             </button>
           </div>
+          {hasSentCode && (
+            <div className="-mt-4 flex justify-end">
+              {codeTimer > 0 ? (
+                <span className="text-[14px] font-black text-[#7f8da3]">
+                  재발송 {formatTimer(codeTimer)}
+                </span>
+              ) : (
+                <button
+                  className={[
+                    "text-[14px] font-black",
+                    email.trim().length > 0
+                      ? "text-[#5daeea]"
+                      : "cursor-not-allowed text-[#b8c2cf]",
+                  ].join(" ")}
+                  disabled={email.trim().length === 0}
+                  onClick={sendCode}
+                  type="button"
+                >
+                  재발송
+                </button>
+              )}
+            </div>
+          )}
           {emailError && (
             <p className="-mt-4 text-[14px] font-bold text-[#ef5f67]">
               {emailError}
