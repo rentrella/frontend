@@ -406,11 +406,11 @@ export default function Home() {
             <div className="flex h-[58px] w-[58px] items-center justify-center rounded-[17px] bg-[#68b5ef] text-white">
               <UmbrellaIcon className="text-white" />
             </div>
-            <div>
-              <h1 className="text-[33px] font-black tracking-[-0.03em]">
+            <div className="flex flex-col justify-center">
+              <h1 className="text-[33px] font-black leading-[1.02] tracking-[-0.03em]">
                 Rentrella
               </h1>
-              <p className="mt-2 text-[17px] font-medium text-[#9aa5b3]">
+              <p className="mt-0.5 text-[17px] font-medium leading-[1.12] text-[#9aa5b3]">
                 우산 대여 서비스
               </p>
             </div>
