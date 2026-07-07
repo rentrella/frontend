@@ -37,13 +37,6 @@ const weatherLabels: Record<WeatherKind, string> = {
   cloudy: "흐림",
 };
 
-const weatherOptions: { kind: WeatherKind; label: string }[] = [
-  { kind: "sunny", label: "맑음" },
-  { kind: "rain", label: "비" },
-  { kind: "snow", label: "눈" },
-  { kind: "cloudy", label: "흐림" },
-];
-
 const sunnyBushes = [
   { left: 29, bottom: 18, size: 26, color: "#238f4f" },
   { left: 62, bottom: 17, size: 31, color: "#238f4f" },
@@ -338,14 +331,6 @@ export default function Home() {
     setMessage(`우산 #${id} 대여가 완료되었습니다.`);
   };
 
-  const previewWeather = (kind: WeatherKind) => {
-    setWeather({
-      kind,
-      label: weatherLabels[kind],
-      temperature: weather.temperature,
-    });
-  };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -466,24 +451,6 @@ export default function Home() {
               </p>
             </div>
           </section>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            {weatherOptions.map((option) => (
-              <button
-                className={[
-                  "h-11 rounded-full px-6 text-[15px] font-black shadow-[0_10px_24px_rgba(35,49,72,0.06)]",
-                  weather.kind === option.kind
-                    ? "bg-[#111728] text-white"
-                    : "border border-[#dce6ef] bg-white text-[#59677d]",
-                ].join(" ")}
-                key={option.kind}
-                onClick={() => previewWeather(option.kind)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
 
           {message && (
             <p className="mt-5 rounded-2xl bg-[#eef7ff] px-5 py-3 text-[15px] font-bold text-[#4d9dde]">
