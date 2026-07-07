@@ -40,7 +40,6 @@ const weatherLabels: Record<WeatherKind, string> = {
 
 const RENTAL_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
 const authStorageKey = "rentrella-authenticated";
-const rememberStorageKey = "rentrella-remember-login";
 
 const sunnyBushes = [
   { left: 29, bottom: 18, size: 26, color: "#238f4f" },
@@ -393,7 +392,6 @@ export default function Home() {
 
   const logout = () => {
     window.localStorage.removeItem(authStorageKey);
-    window.localStorage.removeItem(rememberStorageKey);
     window.sessionStorage.removeItem(authStorageKey);
     router.push("/");
   };

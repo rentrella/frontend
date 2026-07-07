@@ -18,13 +18,27 @@ const temporaryAccount = {
 };
 
 const authStorageKey = "rentrella-authenticated";
+const rememberedEmailStorageKey = "rentrella-remembered-email";
 const rememberStorageKey = "rentrella-remember-login";
+const rememberedPasswordStorageKey = "rentrella-remembered-password";
+
+function getStoredValue(key: string) {
+  if (typeof window === "undefined") return "";
+
+  return window.localStorage.getItem(key) ?? "";
+}
+
+function getStoredRememberLogin() {
+  if (typeof window === "undefined") return false;
+
+  return window.localStorage.getItem(rememberStorageKey) === "true";
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberLogin, setRememberLogin] = useState(false);
+  const [email, setEmail] = useState(() => getStoredValue(rememberedEmailStorageKey));
+  const [password, setPassword] = useState(() => getStoredValue(rememberedPasswordStorageKey));
+  const [rememberLogin, setRememberLogin] = useState(() => getStoredRememberLogin());
   const [loginError, setLoginError] = useState("");
   const canLogin = email.trim().length > 0 && password.trim().length > 0;
 
@@ -60,9 +74,13 @@ export default function LoginPage() {
     window.sessionStorage.setItem(authStorageKey, "true");
     if (rememberLogin) {
       window.localStorage.setItem(authStorageKey, "true");
+      window.localStorage.setItem(rememberedEmailStorageKey, normalizedEmail);
+      window.localStorage.setItem(rememberedPasswordStorageKey, password);
       window.localStorage.setItem(rememberStorageKey, "true");
     } else {
       window.localStorage.removeItem(authStorageKey);
+      window.localStorage.removeItem(rememberedEmailStorageKey);
+      window.localStorage.removeItem(rememberedPasswordStorageKey);
       window.localStorage.removeItem(rememberStorageKey);
     }
     router.push("/main");
