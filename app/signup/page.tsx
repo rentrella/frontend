@@ -17,12 +17,16 @@ export default function SignupPage() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
+  const [hasPrivacyAgreed, setHasPrivacyAgreed] = useState(false);
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
   const passwordStrength = getPasswordStrength(password);
   const canSignup =
     email.trim().length > 0 &&
     password.trim().length > 0 &&
-    passwordConfirm.trim().length > 0;
+    passwordConfirm.trim().length > 0 &&
+    hasPrivacyAgreed;
 
   const submitSignup = () => {
     if (!isSchoolEmail) {
@@ -42,6 +46,18 @@ export default function SignupPage() {
 
     setEmailError("");
     setPasswordError("");
+  };
+
+  const openPrivacyModal = () => {
+    setHasReadPrivacy(false);
+    setIsPrivacyModalOpen(true);
+  };
+
+  const confirmPrivacyAgreement = () => {
+    if (!hasReadPrivacy) return;
+
+    setHasPrivacyAgreed(true);
+    setIsPrivacyModalOpen(false);
   };
 
   return (
@@ -124,6 +140,26 @@ export default function SignupPage() {
             value={passwordConfirm}
           />
 
+          <button
+            className="flex w-full items-center gap-3 text-left text-[16px] font-black text-[#7f8da3]"
+            onClick={openPrivacyModal}
+            type="button"
+          >
+            <span
+              className={[
+                "flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border-2",
+                hasPrivacyAgreed
+                  ? "border-[#6db6ed] bg-[#e3f1ff] text-[#6db6ed]"
+                  : "border-[#d5e2ef] bg-[#f1f5fa] text-transparent",
+              ].join(" ")}
+            >
+              ✓
+            </span>
+            <span>
+              개인정보 수집 및 이용에 동의
+            </span>
+          </button>
+
           <PrimaryButton disabled={!canSignup} onClick={submitSignup}>
             회원가입 하기
           </PrimaryButton>
@@ -136,6 +172,97 @@ export default function SignupPage() {
           </Link>
         </p>
       </AuthCard>
+
+      {isPrivacyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111728]/35 px-5 py-8 backdrop-blur-sm">
+          <section className="flex max-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col rounded-[32px] border border-[#d5ecff] bg-white p-7 shadow-[0_24px_70px_rgba(17,23,40,0.22)]">
+            <div className="flex items-start justify-between gap-6">
+              <div>
+                <p className="text-[15px] font-black text-[#5daeea]">Rentrella</p>
+                <h3 className="mt-2 text-[30px] font-black tracking-[-0.04em]">
+                  개인정보 수집 및 이용 동의
+                </h3>
+                <p className="mt-2 text-[15px] font-bold text-[#8c99ab]">
+                  내용을 끝까지 확인해야 동의 버튼을 누를 수 있습니다.
+                </p>
+              </div>
+              <button
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f2f6fa] text-[22px] font-black text-[#7a8797]"
+                onClick={() => setIsPrivacyModalOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              className="mt-6 max-h-[380px] overflow-y-auto rounded-[22px] bg-[#f7fbff] px-6 py-5 text-[15px] font-semibold leading-7 text-[#59677d]"
+              onScroll={(event) => {
+                const target = event.currentTarget;
+                const isBottom =
+                  target.scrollTop + target.clientHeight >= target.scrollHeight - 8;
+
+                if (isBottom) {
+                  setHasReadPrivacy(true);
+                }
+              }}
+            >
+              <p className="font-black text-[#111728]">1. 수집하는 개인정보 항목</p>
+              <p className="mt-2">
+                Rentrella는 회원가입 및 우산 대여 서비스 제공을 위해 학교 이메일,
+                비밀번호, 서비스 이용 기록, 우산 대여 및 반납 기록을 수집합니다.
+              </p>
+
+              <p className="mt-6 font-black text-[#111728]">2. 개인정보 수집 목적</p>
+              <p className="mt-2">
+                수집된 정보는 회원 식별, 학교 구성원 확인, 우산 대여 가능 여부 확인,
+                반납 관리, 연체 상태 안내, 문의 응대 목적으로만 사용됩니다.
+              </p>
+
+              <p className="mt-6 font-black text-[#111728]">3. 보관 및 이용 기간</p>
+              <p className="mt-2">
+                회원 정보는 서비스 이용 기간 동안 보관되며, 회원 탈퇴 또는 서비스
+                이용 종료 요청 시 지체 없이 삭제됩니다. 단, 대여 및 반납 기록은
+                분쟁 방지와 운영 기록 확인을 위해 필요한 기간 동안 보관될 수 있습니다.
+              </p>
+
+              <p className="mt-6 font-black text-[#111728]">4. 동의 거부 권리</p>
+              <p className="mt-2">
+                사용자는 개인정보 수집 및 이용에 동의하지 않을 수 있습니다. 다만,
+                필수 정보 수집에 동의하지 않을 경우 Rentrella 회원가입 및 우산 대여
+                서비스를 이용할 수 없습니다.
+              </p>
+
+              <p className="mt-6 font-black text-[#111728]">5. 개인정보 보호</p>
+              <p className="mt-2">
+                Rentrella는 수집된 개인정보가 외부에 임의로 공개되지 않도록 관리하며,
+                서비스 운영 목적 외의 용도로 사용하지 않습니다. 개인정보 접근은 서비스
+                운영에 필요한 범위로 제한됩니다.
+              </p>
+
+              <p className="mt-6 font-black text-[#111728]">6. 문의</p>
+              <p className="mt-2">
+                개인정보 처리와 관련된 문의는 서비스 내 문의하기 기능을 통해 접수할 수
+                있습니다. 접수된 문의는 확인 후 필요한 안내를 제공합니다.
+              </p>
+            </div>
+
+            <button
+              className={[
+                "mt-6 h-14 rounded-[18px] text-[18px] font-black",
+                hasReadPrivacy
+                  ? "bg-[#6db6ed] text-white shadow-[0_12px_22px_rgba(109,182,237,0.24)]"
+                  : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
+              ].join(" ")}
+              disabled={!hasReadPrivacy}
+              onClick={confirmPrivacyAgreement}
+              type="button"
+            >
+              확인했습니다
+            </button>
+          </section>
+        </div>
+      )}
     </AuthPage>
   );
 }
