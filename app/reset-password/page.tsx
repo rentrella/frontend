@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
               onClick={sendCode}
               type="button"
             >
-              인증코드 발송
+              {hasSentCode ? "재발송" : "인증코드 발송"}
             </button>
           </div>
           {emailError && (
