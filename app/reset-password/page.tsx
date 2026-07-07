@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
   const [codeTimer, setCodeTimer] = useState(0);
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
   const passwordStrength = getPasswordStrength(newPassword);
-  const canSendCode = email.trim().length > 0 && codeTimer === 0;
+  const canSendCode = email.trim().length > 0;
   const canConfirmCode = code.trim().length > 0;
   const canResetPassword =
     email.trim().length > 0 &&
