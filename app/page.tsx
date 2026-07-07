@@ -44,6 +44,28 @@ const weatherOptions: { kind: WeatherKind; label: string }[] = [
   { kind: "cloudy", label: "흐림" },
 ];
 
+const sunnyPlants = [
+  { left: 6, bottom: 20, height: 24, width: 3, rotate: -10, color: "#277f43" },
+  { left: 12, bottom: 34, height: 18, width: 3, rotate: 8, color: "#2f9650" },
+  { left: 18, bottom: 26, height: 32, width: 4, rotate: -6, color: "#1f7d3e" },
+  { left: 27, bottom: 39, height: 20, width: 3, rotate: 12, color: "#2e9b55" },
+  { left: 34, bottom: 24, height: 28, width: 3, rotate: -14, color: "#236f39" },
+  { left: 43, bottom: 31, height: 18, width: 2, rotate: 6, color: "#349c58" },
+  { left: 51, bottom: 23, height: 34, width: 4, rotate: 9, color: "#247a41" },
+  { left: 59, bottom: 40, height: 22, width: 3, rotate: -8, color: "#2d9551" },
+  { left: 67, bottom: 27, height: 30, width: 3, rotate: 13, color: "#20733d" },
+  { left: 75, bottom: 36, height: 17, width: 2, rotate: -11, color: "#36a35d" },
+  { left: 83, bottom: 24, height: 25, width: 3, rotate: 7, color: "#2a8d4b" },
+  { left: 91, bottom: 31, height: 20, width: 3, rotate: -5, color: "#257c43" },
+];
+
+const sunnyBushes = [
+  { left: 9, bottom: 16, size: 34, color: "#2fa45d" },
+  { left: 29, bottom: 18, size: 26, color: "#238f4f" },
+  { left: 62, bottom: 17, size: 31, color: "#31a860" },
+  { left: 88, bottom: 15, size: 24, color: "#25884b" },
+];
+
 function getWeatherKind(code: number): WeatherKind {
   if ([0, 1].includes(code)) return "sunny";
   if ([71, 73, 75, 77, 85, 86].includes(code)) return "snow";
@@ -195,18 +217,48 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
         className="absolute inset-0 overflow-hidden bg-[linear-gradient(135deg,#65b9f2_0%,#8bd1ff_52%,#bde9ff_100%)]"
       >
         <div className="weather-sun absolute right-28 top-8 h-28 w-28 rounded-full bg-[#ffe477] shadow-[0_0_58px_rgba(255,228,119,0.8)]" />
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-[linear-gradient(180deg,#6bd285_0%,#35a95c_100%)]" />
-        <div className="absolute bottom-10 left-16 h-10 w-28 rounded-full bg-white/24" />
-        <div className="absolute bottom-14 left-40 h-8 w-24 rounded-full bg-white/18" />
-        {Array.from({ length: 28 }).map((_, index) => (
-          <span
-            className="weather-grass absolute bottom-12 origin-bottom rounded-full bg-[#238f45]"
-            key={index}
+        <div className="absolute -bottom-14 -left-10 h-32 w-[58%] rounded-[50%] bg-[#61c978]" />
+        <div className="absolute -bottom-16 right-[-8%] h-36 w-[70%] rounded-[50%] bg-[#42b565]" />
+        <div className="absolute bottom-0 left-0 right-0 h-14 bg-[linear-gradient(180deg,rgba(86,201,113,0.35)_0%,#35a95c_100%)]" />
+        {sunnyBushes.map((bush, index) => (
+          <div
+            className="weather-grass absolute"
+            key={`bush-${bush.left}`}
             style={{
-              animationDelay: `-${0.2 + index * 0.08}s`,
-              height: `${34 + (index % 5) * 7}px`,
-              left: `${index * 3.8}%`,
-              width: `${4 + (index % 3)}px`,
+              animationDelay: `-${0.35 + index * 0.16}s`,
+              bottom: `${bush.bottom}px`,
+              height: `${bush.size}px`,
+              left: `${bush.left}%`,
+              width: `${bush.size * 1.65}px`,
+            }}
+          >
+            <span
+              className="absolute bottom-0 left-0 h-full w-[58%] rounded-full"
+              style={{ backgroundColor: bush.color }}
+            />
+            <span
+              className="absolute bottom-0 left-[28%] h-[80%] w-[58%] rounded-full"
+              style={{ backgroundColor: bush.color }}
+            />
+            <span
+              className="absolute bottom-0 left-[56%] h-[62%] w-[44%] rounded-full"
+              style={{ backgroundColor: bush.color }}
+            />
+          </div>
+        ))}
+        {sunnyPlants.map((plant, index) => (
+          <span
+            className="weather-grass absolute origin-bottom rounded-[999px_999px_260px_260px]"
+            key={`plant-${plant.left}`}
+            style={{
+              animationDelay: `-${0.2 + index * 0.09}s`,
+              backgroundColor: plant.color,
+              bottom: `${plant.bottom}px`,
+              height: `${plant.height}px`,
+              left: `${plant.left}%`,
+              transform: `rotate(${plant.rotate}deg)`,
+              transformOrigin: "50% 100%",
+              width: `${plant.width}px`,
             }}
           />
         ))}
