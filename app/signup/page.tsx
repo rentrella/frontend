@@ -17,7 +17,14 @@ export default function SignupPage() {
 
         <form className="mt-8 space-y-5">
           <Field icon={<UserIcon />} label="이름" placeholder="홍길동" />
-          <Field icon={<MailIcon />} label="이메일" placeholder="student@gsm.hs.kr" type="email" />
+          <Field
+            icon={<MailIcon />}
+            label="이메일"
+            pattern="^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$"
+            placeholder="student@gsm.hs.kr"
+            title="@gsm.hs.kr 이메일만 사용할 수 있습니다."
+            type="email"
+          />
           <Field icon={<LockIcon />} label="비밀번호" placeholder="8자 이상 입력" type="password" />
           <Field icon={<LockIcon />} label="비밀번호 확인" placeholder="비밀번호 다시 입력" type="password" />
 

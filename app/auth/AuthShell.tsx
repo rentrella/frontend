@@ -50,12 +50,16 @@ export function AuthCard({ children }: { children: ReactNode }) {
 export function Field({
   icon,
   label,
+  pattern,
   placeholder,
+  title,
   type = "text",
 }: {
   icon: ReactNode;
   label: string;
+  pattern?: string;
   placeholder: string;
+  title?: string;
   type?: string;
 }) {
   return (
@@ -65,7 +69,9 @@ export function Field({
         <span className="text-[#6db6ed]">{icon}</span>
         <input
           className="min-w-0 flex-1 bg-transparent text-[20px] font-semibold text-[#111728] outline-none placeholder:text-[#9aa8bb]"
+          pattern={pattern}
           placeholder={placeholder}
+          title={title}
           type={type}
         />
       </span>
