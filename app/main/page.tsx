@@ -334,7 +334,9 @@ function UmbrellaCard({
 
 export default function Home() {
   const [umbrellas, setUmbrellas] = useState(initialUmbrellas);
-  const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);\n  const [borrowedAt, setBorrowedAt] = useState<number | null>(null);\n  const [now, setNow] = useState(() => Date.now());
+  const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);
+  const [borrowedAt, setBorrowedAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState("");
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [weather, setWeather] = useState<WeatherState>({
@@ -343,7 +345,9 @@ export default function Home() {
     temperature: null,
   });
 
-  const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;\n  const isBorrowedUmbrellaOverdue =\n    borrowedAt !== null && now - borrowedAt > RENTAL_PERIOD_MS;
+  const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;
+  const isBorrowedUmbrellaOverdue =
+    borrowedAt !== null && now - borrowedAt > RENTAL_PERIOD_MS;
 
   const borrowUmbrella = (id: string) => {
     if (borrowedUmbrellaId) {
@@ -356,7 +360,8 @@ export default function Home() {
         umbrella.id === id ? { ...umbrella, available: false } : umbrella,
       ),
     );
-    setBorrowedUmbrellaId(id);\n    setBorrowedAt(Date.now());
+    setBorrowedUmbrellaId(id);
+    setBorrowedAt(now);
     setMessage(`우산 #${id} 대여가 완료되었습니다.`);
   };
 
@@ -366,9 +371,16 @@ export default function Home() {
         umbrella.id === id ? { ...umbrella, available: true } : umbrella,
       ),
     );
-    setBorrowedUmbrellaId(null);\n    setBorrowedAt(null);
+    setBorrowedUmbrellaId(null);
+    setBorrowedAt(null);
     setMessage(`우산 #${id} 반납이 완료되었습니다.`);
   };
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => setNow(Date.now()), 60 * 1000);
+
+    return () => window.clearInterval(timerId);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -525,6 +537,9 @@ export default function Home() {
               borrowedByCurrentUser={borrowedUmbrellaId === umbrella.id}
               disabledByUserLimit={
                 borrowedUmbrellaId !== null && borrowedUmbrellaId !== umbrella.id
+              }
+              isOverdue={
+                borrowedUmbrellaId === umbrella.id && isBorrowedUmbrellaOverdue
               }
               key={umbrella.id}
               onBorrow={() => borrowUmbrella(umbrella.id)}
