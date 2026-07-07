@@ -89,7 +89,7 @@ export function Field({
         {isPassword && (
           <button
             aria-label={isPasswordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa8bb] hover:bg-white hover:text-[#6db6ed]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#9aa8bb]"
             onClick={() => setIsPasswordVisible((current) => !current)}
             type="button"
           >
