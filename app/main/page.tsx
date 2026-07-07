@@ -241,17 +241,26 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
 }
 
 function UmbrellaCard({
+  borrowedByCurrentUser,
+  disabledByUserLimit,
   umbrella,
   onBorrow,
+  onReturn,
 }: {
+  borrowedByCurrentUser: boolean;
+  disabledByUserLimit: boolean;
   umbrella: Umbrella;
   onBorrow: () => void;
+  onReturn: () => void;
 }) {
+  const canBorrow = umbrella.available && !disabledByUserLimit;
+  const canUseButton = canBorrow || borrowedByCurrentUser;
+
   return (
     <article
       className={[
         "min-h-[208px] rounded-[26px] border bg-white p-6 shadow-[0_10px_26px_rgba(35,49,72,0.04)]",
-        umbrella.available
+        umbrella.available || borrowedByCurrentUser
           ? "border-[#e1e8f0]"
           : "border-[#edf1f6] opacity-45",
       ].join(" ")}
@@ -273,7 +282,7 @@ function UmbrellaCard({
               : "bg-[#e4e9f1] text-[#96a1af]",
           ].join(" ")}
         >
-          {umbrella.available ? "가능" : "빌려짐"}
+          {borrowedByCurrentUser ? "반납하기" : canBorrow ? "빌리기" : "대여불가"}
         </span>
       </div>
 
@@ -297,12 +306,12 @@ function UmbrellaCard({
       <button
         className={[
           "mt-3 h-11 w-full rounded-[14px] text-[17px] font-black",
-          umbrella.available
+          canUseButton
             ? "bg-[#6db6ed] text-white shadow-[0_9px_16px_rgba(109,182,237,0.22)]"
             : "bg-[#edf2f7] text-[#b7c1ce]",
         ].join(" ")}
-        disabled={!umbrella.available}
-        onClick={onBorrow}
+        disabled={!canUseButton}
+        onClick={borrowedByCurrentUser ? onReturn : onBorrow}
         type="button"
       >
         {umbrella.available ? "빌리기" : "⊗  대여불가"}
@@ -313,6 +322,7 @@ function UmbrellaCard({
 
 export default function Home() {
   const [umbrellas, setUmbrellas] = useState(initialUmbrellas);
+  const [borrowedUmbrellaId, setBorrowedUmbrellaId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [weather, setWeather] = useState<WeatherState>({
@@ -324,12 +334,28 @@ export default function Home() {
   const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;
 
   const borrowUmbrella = (id: string) => {
+    if (borrowedUmbrellaId) {
+      setMessage("이미 대여 중인 우산이 있습니다.");
+      return;
+    }
+
     setUmbrellas((current) =>
       current.map((umbrella) =>
         umbrella.id === id ? { ...umbrella, available: false } : umbrella,
       ),
     );
+    setBorrowedUmbrellaId(id);
     setMessage(`우산 #${id} 대여가 완료되었습니다.`);
+  };
+
+  const returnUmbrella = (id: string) => {
+    setUmbrellas((current) =>
+      current.map((umbrella) =>
+        umbrella.id === id ? { ...umbrella, available: true } : umbrella,
+      ),
+    );
+    setBorrowedUmbrellaId(null);
+    setMessage(`우산 #${id} 반납이 완료되었습니다.`);
   };
 
   useEffect(() => {
@@ -484,8 +510,13 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {umbrellas.map((umbrella) => (
             <UmbrellaCard
+              borrowedByCurrentUser={borrowedUmbrellaId === umbrella.id}
+              disabledByUserLimit={
+                borrowedUmbrellaId !== null && borrowedUmbrellaId !== umbrella.id
+              }
               key={umbrella.id}
               onBorrow={() => borrowUmbrella(umbrella.id)}
+              onReturn={() => returnUmbrella(umbrella.id)}
               umbrella={umbrella}
             />
           ))}
