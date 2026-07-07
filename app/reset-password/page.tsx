@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AuthCard,
   AuthPage,
@@ -17,7 +17,12 @@ export default function ResetPasswordPage() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const canSendCode = email.trim().length > 0;
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [codeTimer, setCodeTimer] = useState(0);
+  const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
+  const passwordStrength = getPasswordStrength(newPassword);
+  const canSendCode = email.trim().length > 0 && codeTimer === 0;
   const canConfirmCode = code.trim().length > 0;
   const canResetPassword =
     email.trim().length > 0 &&
@@ -25,24 +30,59 @@ export default function ResetPasswordPage() {
     newPassword.trim().length > 0 &&
     newPasswordConfirm.trim().length > 0;
 
+  useEffect(() => {
+    if (codeTimer === 0) return;
+
+    const timerId = window.setTimeout(() => {
+      setCodeTimer((current) => Math.max(current - 1, 0));
+    }, 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [codeTimer]);
+
+  const sendCode = () => {
+    if (!isSchoolEmail) {
+      setEmailError("이메일 형식이 올바르지 않아요.");
+      return;
+    }
+
+    setEmailError("");
+    setCodeTimer(180);
+  };
+
+  const resetPassword = () => {
+    if (!isSchoolEmail) {
+      setEmailError("이메일 형식이 올바르지 않아요.");
+      return;
+    }
+
+    if (!passwordStrength.isValid) {
+      setPasswordError("비밀번호는 6~20자, 영문+숫자+특수문자를 포함해야 합니다.");
+      return;
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      setPasswordError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    setEmailError("");
+    setPasswordError("");
+  };
+
   return (
     <AuthPage>
       <AuthCard>
-        <div className="flex items-center gap-4">
-          <Step active label="이메일 인증" number={1} />
-          <span className="h-px flex-1 bg-[#dbe9f5]" />
-          <Step label="인증코드 확인" number={2} />
-          <span className="h-px flex-1 bg-[#dbe9f5]" />
-          <Step label="비밀번호 변경" number={3} />
-        </div>
-
-        <form className="mt-8 space-y-6">
+        <form className="space-y-6">
           <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
             <Field
               icon={<MailIcon />}
               label="이메일"
-              onChange={setEmail}
-              placeholder="example@email.com"
+              onChange={(value) => {
+                setEmail(value);
+                if (emailError) setEmailError("");
+              }}
+              placeholder="s25011@gsm.hs.kr"
               type="email"
               value={email}
             />
@@ -54,11 +94,17 @@ export default function ResetPasswordPage() {
                   : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
               ].join(" ")}
               disabled={!canSendCode}
+              onClick={sendCode}
               type="button"
             >
-              인증코드 발송
+              {codeTimer > 0 ? `재발송 ${formatTimer(codeTimer)}` : "인증코드 발송"}
             </button>
           </div>
+          {emailError && (
+            <p className="-mt-4 text-[14px] font-bold text-[#ef5f67]">
+              {emailError}
+            </p>
+          )}
 
           <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
             <Field
@@ -87,21 +133,65 @@ export default function ResetPasswordPage() {
           <Field
             icon={<LockIcon />}
             label="새 비밀번호"
-            onChange={setNewPassword}
-            placeholder="8자 이상 입력"
+            onChange={(value) => {
+              setNewPassword(value);
+              if (passwordError) setPasswordError("");
+            }}
+            placeholder="6~20자 영문+숫자+특수문자"
             type="password"
             value={newPassword}
           />
+          {newPassword && (
+            <div className="-mt-2 rounded-[18px] bg-[#f6f9fc] px-5 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-[14px] font-black text-[#7f8da3]">
+                  비밀번호 안전도
+                </span>
+                <span
+                  className={[
+                    "text-[14px] font-black",
+                    passwordStrength.color,
+                  ].join(" ")}
+                >
+                  {passwordStrength.label}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <span
+                    className={[
+                      "h-2 rounded-full",
+                      index < passwordStrength.level
+                        ? passwordStrength.barColor
+                        : "bg-[#e7edf4]",
+                    ].join(" ")}
+                    key={index}
+                  />
+                ))}
+              </div>
+              <p className="mt-3 text-[13px] font-bold text-[#9aa5b3]">
+                6~20자, 영문+숫자+특수문자 포함
+              </p>
+            </div>
+          )}
           <Field
             icon={<LockIcon />}
             label="새 비밀번호 확인"
-            onChange={setNewPasswordConfirm}
+            onChange={(value) => {
+              setNewPasswordConfirm(value);
+              if (passwordError) setPasswordError("");
+            }}
             placeholder="새 비밀번호 다시 입력"
             type="password"
             value={newPasswordConfirm}
           />
+          {passwordError && (
+            <p className="-mt-2 text-[14px] font-bold text-[#ef5f67]">
+              {passwordError}
+            </p>
+          )}
 
-          <PrimaryButton disabled={!canResetPassword}>
+          <PrimaryButton disabled={!canResetPassword} onClick={resetPassword}>
             비밀번호 변경하기
           </PrimaryButton>
         </form>
@@ -117,35 +207,45 @@ export default function ResetPasswordPage() {
   );
 }
 
-function Step({
-  active = false,
-  label,
-  number,
-}: {
-  active?: boolean;
-  label: string;
-  number: number;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <span
-        className={[
-          "flex h-9 w-9 items-center justify-center rounded-full text-[16px] font-black",
-          active
-            ? "border-2 border-[#6db6ed] bg-[#eaf6ff] text-[#6db6ed]"
-            : "bg-[#f2f6fa] text-[#9aa8bb]",
-        ].join(" ")}
-      >
-        {number}
-      </span>
-      <span
-        className={[
-          "whitespace-nowrap text-[15px] font-black max-sm:hidden",
-          active ? "text-[#111728]" : "text-[#9aa8bb]",
-        ].join(" ")}
-      >
-        {label}
-      </span>
-    </div>
-  );
+function formatTimer(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function getPasswordStrength(password: string) {
+  const hasLength = password.length >= 6 && password.length <= 20;
+  const hasLetter = /[A-Za-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const score = [hasLength, hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
+
+  if (score >= 4) {
+    return {
+      barColor: "bg-[#45bd74]",
+      color: "text-[#2fa461]",
+      isValid: true,
+      label: "안전",
+      level: 3,
+    };
+  }
+
+  if (score >= 3) {
+    return {
+      barColor: "bg-[#f0b84f]",
+      color: "text-[#d49423]",
+      isValid: false,
+      label: "보통",
+      level: 2,
+    };
+  }
+
+  return {
+    barColor: "bg-[#ef5f67]",
+    color: "text-[#ef5f67]",
+    isValid: false,
+    label: "약함",
+    level: 1,
+  };
 }
