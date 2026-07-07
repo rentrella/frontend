@@ -9,23 +9,14 @@ import {
   LockIcon,
   MailIcon,
   PrimaryButton,
-  UserIcon,
 } from "../auth/AuthShell";
 
 export default function SignupPage() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [agreed, setAgreed] = useState(false);
   const [emailError, setEmailError] = useState("");
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
-  const canSignup =
-    name.trim().length > 0 &&
-    email.trim().length > 0 &&
-    password.trim().length > 0 &&
-    passwordConfirm.trim().length > 0 &&
-    agreed;
+  const canSignup = email.trim().length > 0 && password.trim().length > 0;
 
   const submitSignup = () => {
     if (!isSchoolEmail) {
@@ -42,13 +33,6 @@ export default function SignupPage() {
         <h2 className="text-[34px] font-black tracking-[-0.04em]">회원가입</h2>
 
         <form className="mt-8 space-y-5">
-          <Field
-            icon={<UserIcon />}
-            label="이름"
-            onChange={setName}
-            placeholder="홍길동"
-            value={name}
-          />
           <Field
             icon={<MailIcon />}
             label="이메일"
@@ -73,27 +57,6 @@ export default function SignupPage() {
             type="password"
             value={password}
           />
-          <Field
-            icon={<LockIcon />}
-            label="비밀번호 확인"
-            onChange={setPasswordConfirm}
-            placeholder="비밀번호 다시 입력"
-            type="password"
-            value={passwordConfirm}
-          />
-
-          <label className="flex items-center gap-3 text-[15px] font-bold text-[#8c99ab]">
-            <input
-              checked={agreed}
-              className="h-5 w-5 accent-[#6db6ed]"
-              onChange={(event) => setAgreed(event.target.checked)}
-              type="checkbox"
-            />
-            <span>
-              <span className="text-[#5daeea]">서비스 이용약관</span> 및{" "}
-              <span className="text-[#5daeea]">개인정보 처리방침</span>에 동의
-            </span>
-          </label>
 
           <PrimaryButton disabled={!canSignup} onClick={submitSignup}>
             회원가입 하기
