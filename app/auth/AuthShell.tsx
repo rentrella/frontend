@@ -25,7 +25,7 @@ export function AuthPage({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-white px-8 py-8 text-[#111728] max-sm:px-5">
+    <main className="min-h-screen bg-[#f7fbff] px-8 py-8 text-[#111728] max-sm:px-5">
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl flex-col">
         <div className="flex justify-start">
           <AuthLogo />
