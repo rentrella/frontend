@@ -246,6 +246,7 @@ function UmbrellaCard({
   borrowedByCurrentUser,
   disabledByUserLimit,
   isOverdue,
+  rentalDaysRemaining,
   umbrella,
   onBorrow,
   onReturn,
@@ -253,6 +254,7 @@ function UmbrellaCard({
   borrowedByCurrentUser: boolean;
   disabledByUserLimit: boolean;
   isOverdue: boolean;
+  rentalDaysRemaining: number | null;
   umbrella: Umbrella;
   onBorrow: () => void;
   onReturn: () => void;
@@ -312,7 +314,13 @@ function UmbrellaCard({
               : "text-[#b1bbc8]",
         ].join(" ")}
       >
-        {isOverdue ? "대여기간 초과" : borrowedByCurrentUser ? "현재 대여 중 · 7일 대여" : umbrella.available ? "대여 가능" : "현재 대여 중"}
+        {isOverdue
+          ? "대여기간 초과"
+          : borrowedByCurrentUser
+            ? `${rentalDaysRemaining ?? 7}일 남음`
+            : umbrella.available
+              ? "대여 가능"
+              : "현재 대여 중"}
       </p>
 
       <button
@@ -348,6 +356,10 @@ export default function Home() {
   const availableCount = umbrellas.filter((umbrella) => umbrella.available).length;
   const isBorrowedUmbrellaOverdue =
     borrowedAt !== null && now - borrowedAt > RENTAL_PERIOD_MS;
+  const rentalDaysRemaining =
+    borrowedAt === null
+      ? null
+      : Math.max(0, Math.ceil((RENTAL_PERIOD_MS - (now - borrowedAt)) / (24 * 60 * 60 * 1000)));
 
   const borrowUmbrella = (id: string) => {
     if (borrowedUmbrellaId) {
@@ -544,6 +556,9 @@ export default function Home() {
               key={umbrella.id}
               onBorrow={() => borrowUmbrella(umbrella.id)}
               onReturn={() => returnUmbrella(umbrella.id)}
+              rentalDaysRemaining={
+                borrowedUmbrellaId === umbrella.id ? rentalDaysRemaining : null
+              }
               umbrella={umbrella}
             />
           ))}
