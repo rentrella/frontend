@@ -45,7 +45,6 @@ const weatherOptions: { kind: WeatherKind; label: string }[] = [
 ];
 
 const sunnyBushes = [
-  { left: 9, bottom: 16, size: 34, color: "##238f4f" },
   { left: 29, bottom: 18, size: 26, color: "#238f4f" },
   { left: 62, bottom: 17, size: 31, color: "#238f4f" },
   { left: 88, bottom: 15, size: 24, color: "#238f4f" },
