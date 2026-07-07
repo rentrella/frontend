@@ -52,7 +52,9 @@ export function AuthCard({ children }: { children: ReactNode }) {
 
 export function Field({
   icon,
+  inputMode,
   label,
+  maxLength,
   onChange,
   pattern,
   placeholder,
@@ -61,7 +63,9 @@ export function Field({
   value,
 }: {
   icon: ReactNode;
+  inputMode?: "text" | "email" | "numeric" | "tel" | "url" | "search" | "none" | "decimal";
   label: string;
+  maxLength?: number;
   onChange?: (value: string) => void;
   pattern?: string;
   placeholder: string;
@@ -79,6 +83,8 @@ export function Field({
         <span className="text-[#6db6ed]">{icon}</span>
         <input
           className="min-w-0 flex-1 bg-transparent text-[20px] font-semibold text-[#111728] outline-none placeholder:text-[#9aa8bb]"
+          inputMode={inputMode}
+          maxLength={maxLength}
           pattern={pattern}
           placeholder={placeholder}
           title={title}

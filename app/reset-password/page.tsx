@@ -111,8 +111,11 @@ export default function ResetPasswordPage() {
           <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
             <Field
               icon={<KeyIcon />}
+              inputMode="numeric"
               label="인증코드"
-              onChange={setCode}
+              maxLength={6}
+              onChange={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+              pattern="[0-9]*"
               placeholder="6자리 숫자 입력"
               value={code}
             />
