@@ -14,9 +14,13 @@ import {
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
-  const canSignup = email.trim().length > 0 && password.trim().length > 0;
+  const canSignup =
+    email.trim().length > 0 &&
+    password.trim().length > 0 &&
+    passwordConfirm.trim().length > 0;
 
   const submitSignup = () => {
     if (!isSchoolEmail) {
@@ -56,6 +60,14 @@ export default function SignupPage() {
             placeholder="8자 이상 입력"
             type="password"
             value={password}
+          />
+          <Field
+            icon={<LockIcon />}
+            label="비밀번호 확인"
+            onChange={setPasswordConfirm}
+            placeholder="비밀번호 다시 입력"
+            type="password"
+            value={passwordConfirm}
           />
 
           <PrimaryButton disabled={!canSignup} onClick={submitSignup}>
