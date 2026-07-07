@@ -21,14 +21,8 @@ body {
 a,
 button {
   transition:
-    transform 180ms ease,
     box-shadow 180ms ease,
     background-color 180ms ease;
-}
-
-a:hover,
-button:hover {
-  transform: translateY(-1px);
 }
 
 .weather-rain {
