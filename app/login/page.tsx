@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import {
   AuthCard,
   AuthPage,
@@ -9,6 +12,10 @@ import {
 } from "../auth/AuthShell";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const canLogin = email.trim().length > 0 && password.trim().length > 0;
+
   return (
     <AuthPage>
       <AuthCard>
@@ -18,8 +25,22 @@ export default function LoginPage() {
         </p>
 
         <form className="mt-8 space-y-5">
-          <Field icon={<MailIcon />} label="이메일" placeholder="student@gsm.hs.kr" type="email" />
-          <Field icon={<LockIcon />} label="비밀번호" placeholder="비밀번호 입력" type="password" />
+          <Field
+            icon={<MailIcon />}
+            label="이메일"
+            onChange={setEmail}
+            placeholder="student@gsm.hs.kr"
+            type="email"
+            value={email}
+          />
+          <Field
+            icon={<LockIcon />}
+            label="비밀번호"
+            onChange={setPassword}
+            placeholder="비밀번호 입력"
+            type="password"
+            value={password}
+          />
 
           <div className="flex items-center justify-between text-[15px] font-bold">
             <label className="flex items-center gap-2 text-[#8c99ab]">
@@ -31,7 +52,9 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <PrimaryButton href="/main">로그인 하기</PrimaryButton>
+          <PrimaryButton disabled={!canLogin} href="/main">
+            로그인 하기
+          </PrimaryButton>
         </form>
 
         <p className="mt-6 text-center text-[16px] font-medium text-[#9aa5b3]">

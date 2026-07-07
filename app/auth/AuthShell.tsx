@@ -53,17 +53,21 @@ export function AuthCard({ children }: { children: ReactNode }) {
 export function Field({
   icon,
   label,
+  onChange,
   pattern,
   placeholder,
   title,
   type = "text",
+  value,
 }: {
   icon: ReactNode;
   label: string;
+  onChange?: (value: string) => void;
   pattern?: string;
   placeholder: string;
   title?: string;
   type?: string;
+  value?: string;
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPassword = type === "password";
@@ -79,6 +83,8 @@ export function Field({
           placeholder={placeholder}
           title={title}
           type={isPassword && isPasswordVisible ? "text" : type}
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
         />
         {isPassword && (
           <button
@@ -97,15 +103,21 @@ export function Field({
 
 export function PrimaryButton({
   children,
+  disabled = false,
   href,
 }: {
   children: ReactNode;
+  disabled?: boolean;
   href?: string;
 }) {
-  const className =
-    "flex h-[74px] w-full items-center justify-center rounded-[22px] bg-[#6db6ed] text-[22px] font-black text-white shadow-[0_14px_24px_rgba(109,182,237,0.28)]";
+  const className = [
+    "flex h-[74px] w-full items-center justify-center rounded-[22px] text-[22px] font-black shadow-[0_14px_24px_rgba(109,182,237,0.28)]",
+    disabled
+      ? "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8] shadow-none"
+      : "bg-[#6db6ed] text-white",
+  ].join(" ");
 
-  if (href) {
+  if (href && !disabled) {
     return (
       <Link className={className} href={href}>
         {children}
@@ -114,7 +126,7 @@ export function PrimaryButton({
   }
 
   return (
-    <button className={className} type="button">
+    <button className={className} disabled={disabled} type="button">
       {children}
     </button>
   );

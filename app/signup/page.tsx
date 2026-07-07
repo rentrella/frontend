@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import {
   AuthCard,
   AuthPage,
@@ -10,33 +13,73 @@ import {
 } from "../auth/AuthShell";
 
 export default function SignupPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
+  const canSignup =
+    name.trim().length > 0 &&
+    isSchoolEmail &&
+    password.trim().length > 0 &&
+    passwordConfirm.trim().length > 0 &&
+    agreed;
+
   return (
     <AuthPage>
       <AuthCard>
         <h2 className="text-[34px] font-black tracking-[-0.04em]">회원가입</h2>
 
         <form className="mt-8 space-y-5">
-          <Field icon={<UserIcon />} label="이름" placeholder="홍길동" />
+          <Field
+            icon={<UserIcon />}
+            label="이름"
+            onChange={setName}
+            placeholder="홍길동"
+            value={name}
+          />
           <Field
             icon={<MailIcon />}
             label="이메일"
+            onChange={setEmail}
             pattern="^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$"
             placeholder="student@gsm.hs.kr"
             title="@gsm.hs.kr 이메일만 사용할 수 있습니다."
             type="email"
+            value={email}
           />
-          <Field icon={<LockIcon />} label="비밀번호" placeholder="8자 이상 입력" type="password" />
-          <Field icon={<LockIcon />} label="비밀번호 확인" placeholder="비밀번호 다시 입력" type="password" />
+          <Field
+            icon={<LockIcon />}
+            label="비밀번호"
+            onChange={setPassword}
+            placeholder="8자 이상 입력"
+            type="password"
+            value={password}
+          />
+          <Field
+            icon={<LockIcon />}
+            label="비밀번호 확인"
+            onChange={setPasswordConfirm}
+            placeholder="비밀번호 다시 입력"
+            type="password"
+            value={passwordConfirm}
+          />
 
           <label className="flex items-center gap-3 text-[15px] font-bold text-[#8c99ab]">
-            <input className="h-5 w-5 accent-[#6db6ed]" type="checkbox" />
+            <input
+              checked={agreed}
+              className="h-5 w-5 accent-[#6db6ed]"
+              onChange={(event) => setAgreed(event.target.checked)}
+              type="checkbox"
+            />
             <span>
               <span className="text-[#5daeea]">서비스 이용약관</span> 및{" "}
               <span className="text-[#5daeea]">개인정보 처리방침</span>에 동의
             </span>
           </label>
 
-          <PrimaryButton>회원가입 하기</PrimaryButton>
+          <PrimaryButton disabled={!canSignup}>회원가입 하기</PrimaryButton>
         </form>
 
         <p className="mt-6 text-center text-[16px] font-medium text-[#9aa5b3]">
