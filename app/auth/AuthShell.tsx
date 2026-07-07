@@ -105,10 +105,12 @@ export function PrimaryButton({
   children,
   disabled = false,
   href,
+  onClick,
 }: {
   children: ReactNode;
   disabled?: boolean;
   href?: string;
+  onClick?: () => void;
 }) {
   const className = [
     "flex h-[74px] w-full items-center justify-center rounded-[22px] text-[22px] font-black shadow-[0_14px_24px_rgba(109,182,237,0.28)]",
@@ -126,7 +128,7 @@ export function PrimaryButton({
   }
 
   return (
-    <button className={className} disabled={disabled} type="button">
+    <button className={className} disabled={disabled} onClick={onClick} type="button">
       {children}
     </button>
   );

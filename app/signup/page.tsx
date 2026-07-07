@@ -18,13 +18,23 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
   const canSignup =
     name.trim().length > 0 &&
-    isSchoolEmail &&
+    email.trim().length > 0 &&
     password.trim().length > 0 &&
     passwordConfirm.trim().length > 0 &&
     agreed;
+
+  const submitSignup = () => {
+    if (!isSchoolEmail) {
+      setEmailError("이메일 형식이 올바르지 않아요.");
+      return;
+    }
+
+    setEmailError("");
+  };
 
   return (
     <AuthPage>
@@ -42,13 +52,19 @@ export default function SignupPage() {
           <Field
             icon={<MailIcon />}
             label="이메일"
-            onChange={setEmail}
-            pattern="^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$"
+            onChange={(value) => {
+              setEmail(value);
+              if (emailError) setEmailError("");
+            }}
             placeholder="student@gsm.hs.kr"
-            title="@gsm.hs.kr 이메일만 사용할 수 있습니다."
             type="email"
             value={email}
           />
+          {emailError && (
+            <p className="-mt-2 text-[14px] font-bold text-[#ef5f67]">
+              {emailError}
+            </p>
+          )}
           <Field
             icon={<LockIcon />}
             label="비밀번호"
@@ -79,7 +95,9 @@ export default function SignupPage() {
             </span>
           </label>
 
-          <PrimaryButton disabled={!canSignup}>회원가입 하기</PrimaryButton>
+          <PrimaryButton disabled={!canSignup} onClick={submitSignup}>
+            회원가입 하기
+          </PrimaryButton>
         </form>
 
         <p className="mt-6 text-center text-[16px] font-medium text-[#9aa5b3]">
