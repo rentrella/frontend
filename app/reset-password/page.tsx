@@ -102,29 +102,6 @@ export default function ResetPasswordPage() {
               인증코드 발송
             </button>
           </div>
-          {hasSentCode && (
-            <div className="-mt-4 flex justify-end">
-              {codeTimer > 0 ? (
-                <span className="text-[14px] font-black text-[#7f8da3]">
-                  재발송 {formatTimer(codeTimer)}
-                </span>
-              ) : (
-                <button
-                  className={[
-                    "text-[14px] font-black",
-                    email.trim().length > 0
-                      ? "text-[#5daeea]"
-                      : "cursor-not-allowed text-[#b8c2cf]",
-                  ].join(" ")}
-                  disabled={email.trim().length === 0}
-                  onClick={sendCode}
-                  type="button"
-                >
-                  재발송
-                </button>
-              )}
-            </div>
-          )}
           {emailError && (
             <p className="-mt-4 text-[14px] font-bold text-[#ef5f67]">
               {emailError}
@@ -139,19 +116,43 @@ export default function ResetPasswordPage() {
               placeholder="6자리 숫자 입력"
               value={code}
             />
-            <button
-              className={[
-                "h-[74px] rounded-[22px] px-12 text-[18px] font-black",
-                canConfirmCode
-                  ? "bg-[#6db6ed] text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
-                  : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
-              ].join(" ")}
-              disabled={!canConfirmCode}
-              type="button"
-            >
-              확인
-            </button>
+            <div className="flex items-end gap-3">
+              {codeTimer > 0 && (
+                <span className="flex h-[74px] min-w-20 items-center justify-center rounded-[22px] bg-[#f2f6fa] px-5 text-[18px] font-black text-[#7f8da3]">
+                  {formatTimer(codeTimer)}
+                </span>
+              )}
+              <button
+                className={[
+                  "h-[74px] rounded-[22px] px-12 text-[18px] font-black",
+                  canConfirmCode
+                    ? "bg-[#6db6ed] text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
+                    : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
+                ].join(" ")}
+                disabled={!canConfirmCode}
+                type="button"
+              >
+                확인
+              </button>
+            </div>
           </div>
+          {hasSentCode && codeTimer === 0 && (
+            <div className="-mt-4 flex justify-end">
+              <button
+                className={[
+                  "text-[14px] font-black",
+                  email.trim().length > 0
+                    ? "cursor-pointer text-[#5daeea]"
+                    : "cursor-not-allowed text-[#b8c2cf]",
+                ].join(" ")}
+                disabled={email.trim().length === 0}
+                onClick={sendCode}
+                type="button"
+              >
+                재발송
+              </button>
+            </div>
+          )}
 
           <div className="h-px bg-[#e7eef5]" />
 
