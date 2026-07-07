@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Umbrella = {
@@ -417,14 +418,22 @@ export default function Home() {
             </div>
           </div>
 
-          <button
-            className="flex h-[46px] items-center gap-3 rounded-full border border-[#bfddf5] bg-[#e7f5ff] px-6 text-[17px] font-black text-[#5daeea]"
-            onClick={() => setIsContactOpen(true)}
-            type="button"
-          >
-            <ChatIcon />
-            문의하기
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              className="flex h-[46px] items-center gap-3 rounded-full border border-[#bfddf5] bg-[#e7f5ff] px-6 text-[17px] font-black text-[#5daeea]"
+              onClick={() => setIsContactOpen(true)}
+              type="button"
+            >
+              <ChatIcon />
+              문의하기
+            </button>
+            <Link
+              className="flex h-[46px] items-center rounded-full border border-[#dce6ef] bg-white px-6 text-[17px] font-black text-[#7f8da3]"
+              href="/"
+            >
+              로그아웃
+            </Link>
+          </div>
         </div>
       </header>
 
