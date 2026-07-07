@@ -129,7 +129,7 @@ function CloudShape({
       className={`weather-cloud absolute ${className}`}
       fill="none"
       height="116"
-      style={{ animationDelay: delay }}
+      style={{ animationDelay: `-${delay}` }}
       viewBox="0 0 260 116"
       width="260"
     >
@@ -154,7 +154,7 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
             className="weather-rain absolute -top-10 h-20 w-[2px] rounded-full bg-white/65"
             key={index}
             style={{
-              animationDelay: `${(index % 12) * 0.1}s`,
+              animationDelay: `-${0.12 + (index % 12) * 0.1}s`,
               animationDuration: `${0.72 + (index % 5) * 0.07}s`,
               left: `${(index * 5.2) % 100}%`,
             }}
@@ -176,7 +176,7 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
             className="weather-snow absolute -top-8 rounded-full bg-white/90"
             key={index}
             style={{
-              animationDelay: `${(index % 14) * 0.15}s`,
+              animationDelay: `-${0.35 + (index % 14) * 0.15}s`,
               animationDuration: `${2.8 + (index % 6) * 0.3}s`,
               height: `${6 + (index % 4) * 2}px`,
               left: `${(index * 7.5) % 100}%`,
@@ -203,7 +203,7 @@ function WeatherScene({ weather }: { weather: WeatherState }) {
             className="weather-grass absolute bottom-12 origin-bottom rounded-full bg-[#238f45]"
             key={index}
             style={{
-              animationDelay: `${index * 0.08}s`,
+              animationDelay: `-${0.2 + index * 0.08}s`,
               height: `${34 + (index % 5) * 7}px`,
               left: `${index * 3.8}%`,
               width: `${4 + (index % 3)}px`,

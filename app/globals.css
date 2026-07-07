@@ -46,6 +46,7 @@ button:hover {
 
 .weather-sun {
   animation: weather-sun-glow 2.8s ease-in-out infinite;
+  animation-delay: -1.1s;
 }
 
 .weather-grass {
