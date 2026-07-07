@@ -6,17 +6,11 @@ import {
   LockIcon,
   MailIcon,
   PrimaryButton,
-  UmbrellaIcon,
 } from "../auth/AuthShell";
 
 export default function LoginPage() {
   return (
-    <AuthPage
-      badge="로그인"
-      description="학교에서 필요한 우산을 빠르게 확인하고 대여하세요."
-      icon={<UmbrellaIcon />}
-      title={"다시 만나서\n반가워요"}
-    >
+    <AuthPage>
       <AuthCard>
         <h2 className="text-[34px] font-black tracking-[-0.04em]">로그인</h2>
         <p className="mt-3 text-[17px] font-medium text-[#7f8da3]">

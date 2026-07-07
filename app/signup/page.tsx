@@ -11,12 +11,7 @@ import {
 
 export default function SignupPage() {
   return (
-    <AuthPage
-      badge="회원가입"
-      description="계정을 만들고 학교 우산 대여 현황을 바로 확인하세요."
-      icon={<UserIcon />}
-      title={"Rentrella를\n시작하세요"}
-    >
+    <AuthPage>
       <AuthCard>
         <h2 className="text-[34px] font-black tracking-[-0.04em]">회원가입</h2>
 

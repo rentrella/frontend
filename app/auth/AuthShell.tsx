@@ -20,42 +20,19 @@ export function AuthLogo() {
 }
 
 export function AuthPage({
-  badge,
   children,
-  description,
-  icon,
-  title,
 }: {
-  badge: string;
   children: ReactNode;
-  description: string;
-  icon: ReactNode;
-  title: string;
 }) {
   return (
     <main className="min-h-screen bg-[#f7fbff] px-6 py-8 text-[#111728]">
-      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col">
-        <div className="flex justify-center">
+      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col">
+        <div className="flex justify-start">
           <AuthLogo />
         </div>
 
-        <div className="flex flex-1 flex-col justify-center py-10">
-          <section className="mb-8 text-center">
-            <div className="inline-flex items-center gap-3 rounded-full bg-white px-4 py-3 text-[18px] font-black text-[#6db6ed] shadow-[0_14px_36px_rgba(40,80,120,0.08)]">
-              <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#6db6ed] text-white">
-                {icon}
-              </span>
-              {badge}
-            </div>
-            <h1 className="mt-6 whitespace-pre-line text-[48px] font-black leading-[1.08] tracking-[-0.05em] text-[#111728] max-sm:text-[38px]">
-              {title}
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-[19px] font-medium leading-8 text-[#68758a]">
-              {description}
-            </p>
-          </section>
-
-          {children}
+        <div className="flex flex-1 items-center justify-center py-10">
+          <div className="w-full max-w-3xl">{children}</div>
         </div>
       </section>
     </main>

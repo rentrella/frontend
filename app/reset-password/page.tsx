@@ -11,12 +11,7 @@ import {
 
 export default function ResetPasswordPage() {
   return (
-    <AuthPage
-      badge="비밀번호 찾기"
-      description="가입하신 이메일로 인증코드를 발송해 드립니다."
-      icon={<LockIcon />}
-      title={"비밀번호를\n재설정하세요"}
-    >
+    <AuthPage>
       <AuthCard>
         <div className="flex items-center gap-4">
           <Step active label="이메일 인증" number={1} />
