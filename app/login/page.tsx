@@ -32,11 +32,13 @@ export default function LoginPage() {
       return;
     }
 
-    if (
-      normalizedEmail !== temporaryAccount.email ||
-      password !== temporaryAccount.password
-    ) {
+    if (normalizedEmail !== temporaryAccount.email) {
       setLoginError("계정이 올바르지 않습니다.");
+      return;
+    }
+
+    if (password !== temporaryAccount.password) {
+      setLoginError("비밀번호가 올바르지 않습니다.");
       return;
     }
 
