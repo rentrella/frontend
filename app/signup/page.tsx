@@ -49,6 +49,11 @@ export default function SignupPage() {
   };
 
   const openPrivacyModal = () => {
+    if (hasPrivacyAgreed) {
+      setHasPrivacyAgreed(false);
+      return;
+    }
+
     setHasReadPrivacy(false);
     setIsPrivacyModalOpen(true);
   };
