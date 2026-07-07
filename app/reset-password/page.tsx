@@ -64,6 +64,8 @@ export default function ResetPasswordPage() {
         tone: "success",
         text: "인증코드 확인이 완료되었습니다.",
       });
+      setHasSentCode(false);
+      setCodeTimer(0);
       return;
     }
 
