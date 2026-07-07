@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   AuthCard,
@@ -11,10 +12,37 @@ import {
   PrimaryButton,
 } from "../auth/AuthShell";
 
+const temporaryAccount = {
+  email: "s25011@gsm.hs.kr",
+  password: "sunwoo4114!",
+};
+
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
   const canLogin = email.trim().length > 0 && password.trim().length > 0;
+
+  const submitLogin = () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!/^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(normalizedEmail)) {
+      setLoginError("이메일 형식이 올바르지 않습니다.");
+      return;
+    }
+
+    if (
+      normalizedEmail !== temporaryAccount.email ||
+      password !== temporaryAccount.password
+    ) {
+      setLoginError("계정이 올바르지 않습니다.");
+      return;
+    }
+
+    setLoginError("");
+    router.push("/main");
+  };
 
   return (
     <AuthPage>
@@ -28,8 +56,11 @@ export default function LoginPage() {
           <Field
             icon={<MailIcon />}
             label="이메일"
-            onChange={setEmail}
-            placeholder="student@gsm.hs.kr"
+            onChange={(value) => {
+              setEmail(value);
+              if (loginError) setLoginError("");
+            }}
+            placeholder="s25011@gsm.hs.kr"
             type="email"
             value={email}
           />
@@ -41,6 +72,11 @@ export default function LoginPage() {
             type="password"
             value={password}
           />
+          {loginError && (
+            <p className="-mt-2 text-[14px] font-bold text-[#ef5f67]">
+              {loginError}
+            </p>
+          )}
 
           <div className="flex items-center justify-between text-[15px] font-bold">
             <label className="flex items-center gap-2 text-[#8c99ab]">
@@ -52,7 +88,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <PrimaryButton disabled={!canLogin} href="/main">
+          <PrimaryButton disabled={!canLogin} onClick={submitLogin}>
             로그인 하기
           </PrimaryButton>
         </form>
