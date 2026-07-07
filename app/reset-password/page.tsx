@@ -12,12 +12,18 @@ import {
   PrimaryButton,
 } from "../auth/AuthShell";
 
+const temporaryVerificationCode = "123456";
+
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [codeMessage, setCodeMessage] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [passwordError, setPasswordError] = useState("");
   const [hasSentCode, setHasSentCode] = useState(false);
   const [codeTimer, setCodeTimer] = useState(0);
@@ -50,6 +56,21 @@ export default function ResetPasswordPage() {
     setEmailError("");
     setHasSentCode(true);
     setCodeTimer(180);
+  };
+
+  const confirmCode = () => {
+    if (code === temporaryVerificationCode) {
+      setCodeMessage({
+        tone: "success",
+        text: "인증코드 확인이 완료되었습니다.",
+      });
+      return;
+    }
+
+    setCodeMessage({
+      tone: "error",
+      text: "인증코드가 올바르지 않습니다.",
+    });
   };
 
   const resetPassword = () => {
@@ -114,7 +135,10 @@ export default function ResetPasswordPage() {
               inputMode="numeric"
               label="인증코드"
               maxLength={6}
-              onChange={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(value) => {
+                setCode(value.replace(/\D/g, "").slice(0, 6));
+                setCodeMessage(null);
+              }}
               pattern="[0-9]*"
               placeholder="6자리 숫자 입력"
               value={code}
@@ -133,6 +157,7 @@ export default function ResetPasswordPage() {
                     : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
                 ].join(" ")}
                 disabled={!canConfirmCode}
+                onClick={confirmCode}
                 type="button"
               >
                 확인
@@ -155,6 +180,18 @@ export default function ResetPasswordPage() {
                 재발송
               </button>
             </div>
+          )}
+          {codeMessage && (
+            <p
+              className={[
+                "-mt-2 rounded-[16px] px-5 py-3 text-[14px] font-black",
+                codeMessage.tone === "success"
+                  ? "bg-[#e8f8ee] text-[#2fa461]"
+                  : "bg-[#fff0f1] text-[#ef5f67]",
+              ].join(" ")}
+            >
+              {codeMessage.text}
+            </p>
           )}
 
           <div className="h-px bg-[#e7eef5]" />
