@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #38bdf8;
+  --primary-foreground: #ffffff;
+  --secondary: #e0f2fe;
+  --secondary-foreground: #0369a1;
+  --muted: #f1f5f9;
+  --muted-foreground: #94a3b8;
+  --accent: #bae6fd;
+  --accent-foreground: #0369a1;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+  --input-background: #f1f5f9;
+  --switch-background: #cbd5e1;
+  --ring: #38bdf8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+
+  --color-slate-50: var(--muted);
+  --color-slate-100: var(--background);
+  --color-slate-200: var(--switch-background);
+  --color-slate-300: var(--switch-background);
+  --color-slate-400: var(--muted-foreground);
+  --color-slate-500: var(--muted-foreground);
+  --color-slate-600: #64748b;
+  --color-slate-700: var(--foreground);
+  --color-slate-800: var(--foreground);
+  --color-slate-900: var(--foreground);
+  --color-slate-950: var(--foreground);
+
+  --color-neutral-50: var(--muted);
+  --color-neutral-100: var(--background);
+  --color-neutral-200: var(--switch-background);
+  --color-neutral-300: var(--switch-background);
+  --color-neutral-400: var(--muted-foreground);
+  --color-neutral-500: var(--muted-foreground);
+  --color-neutral-600: #64748b;
+  --color-neutral-700: var(--foreground);
+  --color-neutral-800: var(--foreground);
+  --color-neutral-900: var(--foreground);
+  --color-neutral-950: var(--foreground);
+
+  --color-sky-50: var(--secondary);
+  --color-sky-100: var(--secondary);
+  --color-sky-200: var(--accent);
+  --color-sky-300: var(--accent);
+  --color-sky-400: var(--ring);
+  --color-sky-500: var(--primary);
+  --color-sky-600: var(--secondary-foreground);
+  --color-sky-700: var(--secondary-foreground);
+
+  --color-indigo-50: var(--secondary);
+  --color-indigo-100: var(--secondary);
+  --color-indigo-200: var(--accent);
+  --color-indigo-600: var(--primary);
+  --color-indigo-700: var(--secondary-foreground);
+
+  --color-emerald-50: var(--secondary);
+  --color-emerald-100: var(--secondary);
+  --color-emerald-200: var(--accent);
+  --color-emerald-300: var(--accent);
+  --color-emerald-500: var(--primary);
+  --color-emerald-600: var(--primary);
+  --color-emerald-700: var(--secondary-foreground);
+
+  --color-amber-50: var(--secondary);
+  --color-amber-100: var(--secondary);
+  --color-amber-200: var(--accent);
+  --color-amber-300: var(--accent);
+  --color-amber-500: var(--primary);
+  --color-amber-700: var(--secondary-foreground);
+
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #fee2e2;
+  --color-rose-200: #fecaca;
+  --color-rose-500: var(--destructive);
+  --color-rose-700: #b91c1c;
+
+  --shadow-color: rgb(14 165 233 / 0.18);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+}
