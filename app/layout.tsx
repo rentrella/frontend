@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: {
-    default: "Rentrella",
-    template: "%s | Rentrella",
-  },
-  description: "School umbrella rental web app and administrator dashboard",
+  title: "Rentrella",
+  description: "필요한 물건을 필요한 기간만 대여하는 렌탈 플랫폼",
 };
 
 export default function RootLayout({
