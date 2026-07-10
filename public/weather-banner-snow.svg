@@ -1,0 +1,53 @@
+<svg width="1168" height="210" viewBox="0 0 1168 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1168" height="210" rx="31" fill="url(#snow-bg)"/>
+  <rect y="162" width="1168" height="48" fill="white" fill-opacity="0.35"/>
+  <g fill="white" fill-opacity="0.9">
+    <circle cx="0" cy="-32" r="3"/>
+    <circle cx="88" cy="20" r="5"/>
+    <circle cx="176" cy="72" r="7"/>
+    <circle cx="264" cy="124" r="9"/>
+    <circle cx="352" cy="-32" r="3"/>
+    <circle cx="440" cy="20" r="5"/>
+    <circle cx="528" cy="72" r="7"/>
+    <circle cx="616" cy="124" r="9"/>
+    <circle cx="704" cy="-32" r="3"/>
+    <circle cx="792" cy="20" r="5"/>
+    <circle cx="880" cy="72" r="7"/>
+    <circle cx="968" cy="124" r="9"/>
+    <circle cx="1056" cy="-32" r="3"/>
+    <circle cx="1144" cy="20" r="5"/>
+    <circle cx="64" cy="102" r="6"/>
+    <circle cx="152" cy="154" r="8"/>
+    <circle cx="240" cy="-2" r="4"/>
+    <circle cx="328" cy="50" r="6"/>
+    <circle cx="416" cy="102" r="8"/>
+    <circle cx="504" cy="154" r="4"/>
+    <circle cx="592" cy="-2" r="6"/>
+    <circle cx="680" cy="50" r="8"/>
+    <circle cx="768" cy="102" r="4"/>
+    <circle cx="856" cy="154" r="6"/>
+    <circle cx="944" cy="-2" r="8"/>
+    <circle cx="1032" cy="50" r="4"/>
+    <circle cx="1120" cy="102" r="6"/>
+    <circle cx="32" cy="36" r="5"/>
+    <circle cx="120" cy="88" r="7"/>
+    <circle cx="208" cy="140" r="9"/>
+    <circle cx="296" cy="-16" r="3"/>
+    <circle cx="384" cy="36" r="5"/>
+    <circle cx="472" cy="88" r="7"/>
+    <circle cx="560" cy="140" r="9"/>
+    <circle cx="648" cy="-16" r="3"/>
+    <circle cx="736" cy="36" r="5"/>
+    <circle cx="824" cy="88" r="7"/>
+    <circle cx="912" cy="140" r="9"/>
+    <circle cx="1000" cy="-16" r="3"/>
+    <circle cx="1088" cy="36" r="5"/>
+  </g>
+  <defs>
+    <linearGradient id="snow-bg" x1="0" y1="0" x2="178" y2="415" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8DB8E8"/>
+      <stop offset="0.52" stop-color="#B9DDFF"/>
+      <stop offset="1" stop-color="#ECF7FF"/>
+    </linearGradient>
+  </defs>
+</svg>
