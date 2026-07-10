@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AuthCard,
   AuthPage,
   Field,
+  KeyIcon,
   LockIcon,
   MailIcon,
   PrimaryButton,
 } from "../auth/AuthShell";
+
+const temporaryVerificationCode = "123456";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -48,28 +51,87 @@ function isErrorResponse(payload: unknown) {
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [codeMessage, setCodeMessage] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
   const [passwordError, setPasswordError] = useState("");
   const [signupError, setSignupError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
   const [hasPrivacyAgreed, setHasPrivacyAgreed] = useState(false);
+  const [hasSentCode, setHasSentCode] = useState(false);
+  const [hasVerifiedCode, setHasVerifiedCode] = useState(false);
+  const [codeTimer, setCodeTimer] = useState(0);
   const normalizedEmail = email.trim().toLowerCase();
   const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(normalizedEmail);
   const passwordStrength = getPasswordStrength(password);
+  const canSendCode = email.trim().length > 0;
+  const canConfirmCode = code.trim().length > 0;
   const canSignup =
     email.trim().length > 0 &&
+    hasVerifiedCode &&
     password.trim().length > 0 &&
     passwordConfirm.trim().length > 0 &&
     hasPrivacyAgreed &&
     !isSubmitting;
 
+  useEffect(() => {
+    if (codeTimer === 0) return;
+
+    const timerId = window.setTimeout(() => {
+      setCodeTimer((current) => Math.max(current - 1, 0));
+    }, 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [codeTimer]);
+
+  const sendCode = () => {
+    if (!isSchoolEmail) {
+      setEmailError("이메일 형식이 올바르지 않아요.");
+      return;
+    }
+
+    setEmailError("");
+    setSignupError("");
+    setCodeMessage(null);
+    setHasVerifiedCode(false);
+    setHasSentCode(true);
+    setCodeTimer(180);
+  };
+
+  const confirmCode = () => {
+    if (code === temporaryVerificationCode) {
+      setCodeMessage({
+        tone: "success",
+        text: "인증코드 확인이 완료되었습니다.",
+      });
+      setHasVerifiedCode(true);
+      setHasSentCode(false);
+      setCodeTimer(0);
+      return;
+    }
+
+    setCodeMessage({
+      tone: "error",
+      text: "인증코드가 올바르지 않습니다.",
+    });
+    setHasVerifiedCode(false);
+  };
+
   const submitSignup = async () => {
     if (!isSchoolEmail) {
       setEmailError("이메일 형식이 올바르지 않아요.");
+      return;
+    }
+
+    if (!hasVerifiedCode) {
+      setSignupError("이메일 인증을 완료해 주세요.");
       return;
     }
 
@@ -138,21 +200,104 @@ export default function SignupPage() {
             if (canSignup) void submitSignup();
           }}
         >
-          <Field
-            icon={<MailIcon />}
-            label="이메일"
-            onChange={(value) => {
-              setEmail(value);
-              if (emailError) setEmailError("");
-              if (signupError) setSignupError("");
-            }}
-            placeholder="s25011@gsm.hs.kr"
-            type="email"
-            value={email}
-          />
+          <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
+            <Field
+              icon={<MailIcon />}
+              label="이메일"
+              onChange={(value) => {
+                setEmail(value);
+                setHasVerifiedCode(false);
+                setCodeMessage(null);
+                if (emailError) setEmailError("");
+                if (signupError) setSignupError("");
+              }}
+              placeholder="s25011@gsm.hs.kr"
+              type="email"
+              value={email}
+            />
+            <button
+              className={[
+                "h-[74px] rounded-[22px] px-8 text-[18px] font-black",
+                canSendCode
+                  ? "bg-[#6db6ed] text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
+                  : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
+              ].join(" ")}
+              disabled={!canSendCode}
+              onClick={sendCode}
+              type="button"
+            >
+              {hasSentCode ? "재발송" : "인증코드 발송"}
+            </button>
+          </div>
           {emailError && (
             <p className="-mt-2 text-[14px] font-bold text-[#ef5f67]">
               {emailError}
+            </p>
+          )}
+          <div className="grid grid-cols-[1fr_auto] items-end gap-4 max-sm:grid-cols-1">
+            <Field
+              icon={<KeyIcon />}
+              inputMode="numeric"
+              label="인증코드"
+              maxLength={6}
+              onChange={(value) => {
+                setCode(value.replace(/\D/g, "").slice(0, 6));
+                setCodeMessage(null);
+                setHasVerifiedCode(false);
+                if (signupError) setSignupError("");
+              }}
+              pattern="[0-9]*"
+              placeholder="6자리 숫자 입력"
+              value={code}
+            />
+            <div className="flex items-end gap-3">
+              {codeTimer > 0 && (
+                <span className="flex h-[74px] min-w-20 items-center justify-center rounded-[22px] bg-[#f2f6fa] px-5 text-[18px] font-black text-[#7f8da3]">
+                  {formatTimer(codeTimer)}
+                </span>
+              )}
+              <button
+                className={[
+                  "h-[74px] rounded-[22px] px-12 text-[18px] font-black",
+                  canConfirmCode
+                    ? "bg-[#6db6ed] text-white shadow-[0_12px_22px_rgba(109,182,237,0.2)]"
+                    : "cursor-not-allowed bg-[#edf2f7] text-[#aeb9c8]",
+                ].join(" ")}
+                disabled={!canConfirmCode}
+                onClick={confirmCode}
+                type="button"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+          {hasSentCode && codeTimer === 0 && (
+            <div className="-mt-4 flex justify-end">
+              <button
+                className={[
+                  "text-[14px] font-black",
+                  email.trim().length > 0
+                    ? "cursor-pointer text-[#5daeea]"
+                    : "cursor-not-allowed text-[#b8c2cf]",
+                ].join(" ")}
+                disabled={email.trim().length === 0}
+                onClick={sendCode}
+                type="button"
+              >
+                재발송
+              </button>
+            </div>
+          )}
+          {codeMessage && (
+            <p
+              className={[
+                "-mt-2 rounded-[16px] px-5 py-3 text-[14px] font-black",
+                codeMessage.tone === "success"
+                  ? "bg-[#e8f8ee] text-[#2fa461]"
+                  : "bg-[#fff0f1] text-[#ef5f67]",
+              ].join(" ")}
+            >
+              {codeMessage.text}
             </p>
           )}
           <Field
@@ -356,6 +501,13 @@ export default function SignupPage() {
       )}
     </AuthPage>
   );
+}
+
+function formatTimer(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 function getPasswordStrength(password: string) {
