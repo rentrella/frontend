@@ -223,7 +223,7 @@ export default function LoginPage() {
               로그인 유지
             </label>
             <Link className="text-[#5daeea]" href="/reset-password">
-              비밀번호 찾기
+              비밀번호 변경
             </Link>
           </div>
 
