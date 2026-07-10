@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
-  return proxyBackend("/login", {
+  return proxyBackend("/auth/login", {
     body: { email, password },
     method: "POST",
   });
