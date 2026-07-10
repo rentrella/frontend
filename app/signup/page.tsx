@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   AuthCard,
@@ -11,24 +12,62 @@ import {
   PrimaryButton,
 } from "../auth/AuthShell";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getResponseMessage(payload: unknown, fallback: string) {
+  if (!isRecord(payload)) {
+    return fallback;
+  }
+
+  const message = payload.msg ?? payload.message ?? payload.error;
+
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : fallback;
+}
+
+function isErrorResponse(payload: unknown) {
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  const { error, status } = payload;
+
+  return (
+    (typeof status === "string" && status.toLowerCase() === "error") ||
+    (typeof status === "number" && status >= 400) ||
+    payload.ok === false ||
+    payload.success === false ||
+    error === true ||
+    (typeof error === "string" && error.trim().length > 0)
+  );
+}
+
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [signupError, setSignupError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
   const [hasPrivacyAgreed, setHasPrivacyAgreed] = useState(false);
-  const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const isSchoolEmail = /^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(normalizedEmail);
   const passwordStrength = getPasswordStrength(password);
   const canSignup =
     email.trim().length > 0 &&
     password.trim().length > 0 &&
     passwordConfirm.trim().length > 0 &&
-    hasPrivacyAgreed;
+    hasPrivacyAgreed &&
+    !isSubmitting;
 
-  const submitSignup = () => {
+  const submitSignup = async () => {
     if (!isSchoolEmail) {
       setEmailError("이메일 형식이 올바르지 않아요.");
       return;
@@ -46,6 +85,28 @@ export default function SignupPage() {
 
     setEmailError("");
     setPasswordError("");
+    setSignupError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/auth/signup", {
+        body: JSON.stringify({ email: normalizedEmail, password }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const payload = (await response.json().catch(() => null)) as unknown;
+
+      if (!response.ok || isErrorResponse(payload)) {
+        setSignupError(getResponseMessage(payload, "회원가입에 실패했습니다."));
+        return;
+      }
+
+      router.push("/login");
+    } catch {
+      setSignupError("회원가입 서버에 연결할 수 없습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const openPrivacyModal = () => {
@@ -70,13 +131,20 @@ export default function SignupPage() {
       <AuthCard>
         <h2 className="text-[34px] font-black tracking-[-0.04em]">회원가입</h2>
 
-        <form className="mt-8 space-y-5">
+        <form
+          className="mt-8 space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canSignup) void submitSignup();
+          }}
+        >
           <Field
             icon={<MailIcon />}
             label="이메일"
             onChange={(value) => {
               setEmail(value);
               if (emailError) setEmailError("");
+              if (signupError) setSignupError("");
             }}
             placeholder="s25011@gsm.hs.kr"
             type="email"
@@ -93,6 +161,7 @@ export default function SignupPage() {
             onChange={(value) => {
               setPassword(value);
               if (passwordError) setPasswordError("");
+              if (signupError) setSignupError("");
             }}
             placeholder="6~20자 영문+숫자+특수문자"
             type="password"
@@ -139,11 +208,23 @@ export default function SignupPage() {
           <Field
             icon={<LockIcon />}
             label="비밀번호 확인"
-            onChange={setPasswordConfirm}
+            onChange={(value) => {
+              setPasswordConfirm(value);
+              if (passwordError) setPasswordError("");
+              if (signupError) setSignupError("");
+            }}
             placeholder="비밀번호 다시 입력"
             type="password"
             value={passwordConfirm}
           />
+          {signupError && (
+            <p
+              aria-live="polite"
+              className="-mt-2 text-[14px] font-bold text-[#ef5f67]"
+            >
+              {signupError}
+            </p>
+          )}
 
           <button
             className="flex w-full items-center gap-3 text-left text-[16px] font-black text-[#7f8da3]"
@@ -165,8 +246,13 @@ export default function SignupPage() {
             </span>
           </button>
 
-          <PrimaryButton disabled={!canSignup} onClick={submitSignup}>
-            회원가입 하기
+          <PrimaryButton
+            disabled={!canSignup}
+            onClick={() => {
+              void submitSignup();
+            }}
+          >
+            {isSubmitting ? "회원가입 중" : "회원가입 하기"}
           </PrimaryButton>
         </form>
 

@@ -12,15 +12,24 @@ import {
   PrimaryButton,
 } from "../auth/AuthShell";
 
-const temporaryAccount = {
-  email: "s25011@gsm.hs.kr",
-  password: "sunwoo4114!",
-};
-
 const authStorageKey = "rentrella-authenticated";
+const authTokenStorageKey = "rentrella-auth-token";
+const authUserStorageKey = "rentrella-auth-user";
 const rememberedEmailStorageKey = "rentrella-remembered-email";
 const rememberStorageKey = "rentrella-remember-login";
-const rememberedPasswordStorageKey = "rentrella-remembered-password";
+const legacyRememberedPasswordStorageKey = "rentrella-remembered-password";
+
+type LoginResponse = {
+  data?: unknown;
+  error?: string;
+  message?: string;
+  msg?: string;
+  status?: string;
+  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  user?: unknown;
+};
 
 function getStoredValue(key: string) {
   if (typeof window === "undefined") return "";
@@ -34,13 +43,88 @@ function getStoredRememberLogin() {
   return window.localStorage.getItem(rememberStorageKey) === "true";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getResponseMessage(payload: unknown, fallback: string) {
+  if (!isRecord(payload)) {
+    return fallback;
+  }
+
+  const message = payload.msg ?? payload.message ?? payload.error;
+
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : fallback;
+}
+
+function findToken(payload: unknown): string | null {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  for (const key of ["token", "accessToken", "access_token", "jwt"]) {
+    const value = payload[key];
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return findToken(payload.data);
+}
+
+function findUser(payload: unknown): unknown {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  return payload.user ?? (isRecord(payload.data) ? payload.data.user : null);
+}
+
+function persistLogin(payload: LoginResponse, rememberLogin: boolean, email: string) {
+  const persistentStorage = rememberLogin ? window.localStorage : window.sessionStorage;
+  const temporaryStorage = rememberLogin ? window.sessionStorage : window.localStorage;
+  const token = findToken(payload);
+  const user = findUser(payload);
+
+  window.localStorage.removeItem(authTokenStorageKey);
+  window.sessionStorage.removeItem(authTokenStorageKey);
+  window.localStorage.removeItem(authUserStorageKey);
+  window.sessionStorage.removeItem(authUserStorageKey);
+  window.sessionStorage.setItem(authStorageKey, "true");
+  persistentStorage.setItem(authStorageKey, "true");
+  temporaryStorage.removeItem(authStorageKey);
+
+  if (token) {
+    persistentStorage.setItem(authTokenStorageKey, token);
+  }
+
+  if (user) {
+    persistentStorage.setItem(authUserStorageKey, JSON.stringify(user));
+  }
+
+  if (rememberLogin) {
+    window.localStorage.setItem(rememberedEmailStorageKey, email);
+    window.localStorage.setItem(rememberStorageKey, "true");
+  } else {
+    window.localStorage.removeItem(rememberedEmailStorageKey);
+    window.localStorage.removeItem(rememberStorageKey);
+  }
+
+  window.localStorage.removeItem(legacyRememberedPasswordStorageKey);
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState(() => getStoredValue(rememberedEmailStorageKey));
-  const [password, setPassword] = useState(() => getStoredValue(rememberedPasswordStorageKey));
+  const [password, setPassword] = useState("");
   const [rememberLogin, setRememberLogin] = useState(() => getStoredRememberLogin());
   const [loginError, setLoginError] = useState("");
-  const canLogin = email.trim().length > 0 && password.trim().length > 0;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const canLogin =
+    email.trim().length > 0 && password.trim().length > 0 && !isSubmitting;
 
   useEffect(() => {
     const authenticated =
@@ -52,7 +136,7 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const submitLogin = () => {
+  const submitLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!/^[A-Za-z0-9._%+-]+@gsm\.hs\.kr$/.test(normalizedEmail)) {
@@ -60,30 +144,29 @@ export default function LoginPage() {
       return;
     }
 
-    if (normalizedEmail !== temporaryAccount.email) {
-      setLoginError("계정이 올바르지 않습니다.");
-      return;
-    }
-
-    if (password !== temporaryAccount.password) {
-      setLoginError("비밀번호가 올바르지 않습니다.");
-      return;
-    }
-
+    setIsSubmitting(true);
     setLoginError("");
-    window.sessionStorage.setItem(authStorageKey, "true");
-    if (rememberLogin) {
-      window.localStorage.setItem(authStorageKey, "true");
-      window.localStorage.setItem(rememberedEmailStorageKey, normalizedEmail);
-      window.localStorage.setItem(rememberedPasswordStorageKey, password);
-      window.localStorage.setItem(rememberStorageKey, "true");
-    } else {
-      window.localStorage.removeItem(authStorageKey);
-      window.localStorage.removeItem(rememberedEmailStorageKey);
-      window.localStorage.removeItem(rememberedPasswordStorageKey);
-      window.localStorage.removeItem(rememberStorageKey);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        body: JSON.stringify({ email: normalizedEmail, password }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const payload = (await response.json().catch(() => null)) as LoginResponse | null;
+
+      if (!response.ok || payload?.status === "error") {
+        setLoginError(getResponseMessage(payload, "로그인에 실패했습니다."));
+        return;
+      }
+
+      persistLogin(payload ?? { status: "success" }, rememberLogin, normalizedEmail);
+      router.push("/main");
+    } catch {
+      setLoginError("로그인 서버에 연결할 수 없습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
-    router.push("/main");
   };
 
   return (
@@ -94,7 +177,13 @@ export default function LoginPage() {
           Rentrella 계정으로 우산 대여 서비스를 이용하세요.
         </p>
 
-        <form className="mt-8 space-y-5">
+        <form
+          className="mt-8 space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canLogin) void submitLogin();
+          }}
+        >
           <Field
             icon={<MailIcon />}
             label="이메일"
@@ -109,7 +198,10 @@ export default function LoginPage() {
           <Field
             icon={<LockIcon />}
             label="비밀번호"
-            onChange={setPassword}
+            onChange={(value) => {
+              setPassword(value);
+              if (loginError) setLoginError("");
+            }}
             placeholder="비밀번호 입력"
             type="password"
             value={password}
@@ -135,8 +227,13 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <PrimaryButton disabled={!canLogin} onClick={submitLogin}>
-            로그인 하기
+          <PrimaryButton
+            disabled={!canLogin}
+            onClick={() => {
+              void submitLogin();
+            }}
+          >
+            {isSubmitting ? "로그인 중" : "로그인 하기"}
           </PrimaryButton>
         </form>
 

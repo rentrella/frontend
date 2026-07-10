@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   CalendarClock,
@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Lock,
   LockOpen,
+  RefreshCw,
   Send,
   ShieldCheck,
   Umbrella,
@@ -21,9 +22,11 @@ import {
 
 type RentalStudent = {
   id: string;
+  userId: number | null;
   name: string;
   className: string;
   borrowedCount: number;
+  deviceId: number | null;
   umbrella: string;
   rentalPeriod: string;
   unreturnedPeriod: string;
@@ -59,14 +62,32 @@ type Stat = {
   iconTone: string;
 };
 
+type UmbrellaLogStatus = "BORROW" | "RETURN";
+
+type UmbrellaLog = {
+  logId: number;
+  userId: number;
+  deviceId: number;
+  status: UmbrellaLogStatus;
+  createdAt: string;
+};
+
+type ApiCommandResponse = {
+  status?: string;
+  msg?: string;
+  message?: string;
+};
+
 const fixedUmbrellaCount = 12;
 
-const rentalStudents: RentalStudent[] = [
+const fallbackRentalStudents: RentalStudent[] = [
   {
     id: "S-2401",
+    userId: 1,
     name: "김민서",
     className: "2학년 3반",
     borrowedCount: 6,
+    deviceId: 4,
     umbrella: "04번",
     rentalPeriod: "07.07 09:42 - 진행 중",
     unreturnedPeriod: "0시간 26분",
@@ -74,9 +95,11 @@ const rentalStudents: RentalStudent[] = [
   },
   {
     id: "S-2418",
+    userId: 2,
     name: "박지훈",
     className: "1학년 1반",
     borrowedCount: 9,
+    deviceId: 8,
     umbrella: "08번",
     rentalPeriod: "07.06 16:20 - 진행 중",
     unreturnedPeriod: "17시간 48분",
@@ -84,9 +107,11 @@ const rentalStudents: RentalStudent[] = [
   },
   {
     id: "S-2520",
+    userId: 3,
     name: "이서연",
     className: "3학년 2반",
     borrowedCount: 3,
+    deviceId: 2,
     umbrella: "02번",
     rentalPeriod: "07.07 08:10 - 07.07 08:54",
     unreturnedPeriod: "-",
@@ -94,9 +119,11 @@ const rentalStudents: RentalStudent[] = [
   },
   {
     id: "S-2604",
+    userId: 4,
     name: "최도윤",
     className: "2학년 5반",
     borrowedCount: 2,
+    deviceId: null,
     umbrella: "-",
     rentalPeriod: "-",
     unreturnedPeriod: "-",
@@ -146,13 +173,6 @@ const initialMessages: SentMessage[] = [
   },
 ];
 
-const initialLogs = [
-  "09:58 박지훈에게 미반납 안내 메시지 전송",
-  "09:43 김민서 04번 슬롯 대여 잠금 해제",
-  "09:35 관리자 08번 슬롯 수동 점검",
-  "08:55 전체 잠금 해제",
-];
-
 const primaryNav: NavItem[] = [
   { label: "대시보드", icon: LayoutDashboard },
   { label: "보안 관리", icon: ShieldCheck },
@@ -185,6 +205,420 @@ function statusTone(status: RentalStudent["status"]) {
   }
 
   return "border-emerald-200 bg-emerald-50 text-emerald-700";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readList(payload: unknown, preferredKeys: string[]): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (!isRecord(payload)) {
+    return [];
+  }
+
+  for (const key of preferredKeys) {
+    const value = payload[key];
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    const nested = readList(value, preferredKeys);
+    if (nested.length > 0) {
+      return nested;
+    }
+  }
+
+  for (const value of Object.values(payload)) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+  }
+
+  return [];
+}
+
+function readString(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+
+  return null;
+}
+
+function readNumber(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    const parsed =
+      typeof value === "number"
+        ? value
+        : typeof value === "string" && value.trim().length > 0
+          ? Number(value)
+          : NaN;
+
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function readBoolean(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+
+      if (normalized === "true" || normalized === "locked") {
+        return true;
+      }
+
+      if (normalized === "false" || normalized === "unlocked") {
+        return false;
+      }
+    }
+  }
+
+  return false;
+}
+
+function formatDeviceLabel(deviceId: number | null) {
+  return deviceId === null ? "-" : `${String(deviceId).padStart(2, "0")}번`;
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+  }).format(date);
+}
+
+function formatDurationFrom(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const start = new Date(value).getTime();
+
+  if (Number.isNaN(start)) {
+    return "-";
+  }
+
+  const diffMinutes = Math.max(0, Math.floor((Date.now() - start) / 60000));
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+
+  return hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+}
+
+function formatRentalPeriod(
+  startedAt: string | null,
+  returnedAt: string | null,
+  status: RentalStudent["status"],
+) {
+  if (!startedAt) {
+    return "-";
+  }
+
+  const startLabel = formatDateTime(startedAt);
+
+  if (status === "대여 중" || status === "미반납") {
+    return `${startLabel} - 진행 중`;
+  }
+
+  if (returnedAt) {
+    return `${startLabel} - ${formatDateTime(returnedAt)}`;
+  }
+
+  return startLabel;
+}
+
+function normalizeStudentStatus(
+  rawStatus: string | null,
+  latestLogStatus: UmbrellaLogStatus | null,
+  locked: boolean,
+): RentalStudent["status"] {
+  if (locked) {
+    return "잠금";
+  }
+
+  const normalized = rawStatus?.toUpperCase() ?? "";
+
+  if (normalized.includes("OVERDUE") || rawStatus?.includes("미반납")) {
+    return "미반납";
+  }
+
+  if (
+    normalized.includes("BORROW") ||
+    normalized.includes("RENT") ||
+    rawStatus?.includes("대여")
+  ) {
+    return "대여 중";
+  }
+
+  if (normalized.includes("RETURN") || rawStatus?.includes("반납")) {
+    return "정상 반납";
+  }
+
+  if (latestLogStatus === "BORROW") {
+    return "대여 중";
+  }
+
+  if (latestLogStatus === "RETURN") {
+    return "정상 반납";
+  }
+
+  return "정상 반납";
+}
+
+function formatClassName(record: Record<string, unknown>) {
+  const className = readString(record, [
+    "className",
+    "class_name",
+    "classroom",
+    "roomName",
+  ]);
+
+  if (className) {
+    return className;
+  }
+
+  const grade = readString(record, ["grade", "schoolGrade", "gradeNumber"]);
+  const classNumber = readString(record, [
+    "classNo",
+    "classNumber",
+    "room",
+    "ban",
+  ]);
+
+  if (grade && classNumber) {
+    return `${grade}학년 ${classNumber}반`;
+  }
+
+  return "-";
+}
+
+function toUmbrellaLog(value: unknown, index: number): UmbrellaLog | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const userId = readNumber(value, ["userId", "user_id"]);
+  const deviceId = readNumber(value, ["deviceId", "device_id", "umbrellaId"]);
+  const rawStatus = readString(value, ["status", "type"]);
+  const status =
+    rawStatus?.toUpperCase() === "BORROW"
+      ? "BORROW"
+      : rawStatus?.toUpperCase() === "RETURN"
+        ? "RETURN"
+        : null;
+
+  if (userId === null || deviceId === null || status === null) {
+    return null;
+  }
+
+  return {
+    createdAt:
+      readString(value, ["createdAt", "created_at", "time", "timestamp"]) ??
+      new Date().toISOString(),
+    deviceId,
+    logId: readNumber(value, ["logId", "log_id", "id"]) ?? index + 1,
+    status,
+    userId,
+  };
+}
+
+function extractUmbrellaLogs(payload: unknown) {
+  return readList(payload, ["logs", "umbrella", "data", "result", "content"])
+    .map(toUmbrellaLog)
+    .filter((log): log is UmbrellaLog => log !== null)
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+}
+
+function getLatestLogsByUser(logs: UmbrellaLog[]) {
+  const latestByUser = new Map<number, UmbrellaLog>();
+
+  for (const log of logs) {
+    const previous = latestByUser.get(log.userId);
+
+    if (
+      !previous ||
+      new Date(log.createdAt).getTime() > new Date(previous.createdAt).getTime()
+    ) {
+      latestByUser.set(log.userId, log);
+    }
+  }
+
+  return latestByUser;
+}
+
+function getBorrowCountsByUser(logs: UmbrellaLog[]) {
+  const counts = new Map<number, number>();
+
+  for (const log of logs) {
+    if (log.status === "BORROW") {
+      counts.set(log.userId, (counts.get(log.userId) ?? 0) + 1);
+    }
+  }
+
+  return counts;
+}
+
+function toRentalStudent(
+  value: unknown,
+  index: number,
+  latestByUser: Map<number, UmbrellaLog>,
+  borrowCounts: Map<number, number>,
+): RentalStudent | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const userId = readNumber(value, ["userId", "user_id", "id"]);
+  const latestLog = userId === null ? null : latestByUser.get(userId) ?? null;
+  const deviceId =
+    readNumber(value, [
+      "deviceId",
+      "device_id",
+      "umbrellaId",
+      "umbrella_id",
+      "slotId",
+    ]) ??
+    latestLog?.deviceId ??
+    null;
+  const status = normalizeStudentStatus(
+    readString(value, ["status", "rentalStatus", "state"]),
+    latestLog?.status ?? null,
+    readBoolean(value, ["locked", "isLocked", "rentalBlocked", "banned"]),
+  );
+  const startedAt =
+    readString(value, [
+      "borrowedAt",
+      "borrowed_at",
+      "rentedAt",
+      "rentalStartAt",
+      "startAt",
+    ]) ?? (latestLog?.status === "BORROW" ? latestLog.createdAt : null);
+  const returnedAt = readString(value, [
+    "returnedAt",
+    "returned_at",
+    "rentalEndAt",
+    "endAt",
+  ]);
+  const studentCode =
+    readString(value, [
+      "studentId",
+      "student_id",
+      "studentNo",
+      "studentNumber",
+      "code",
+    ]) ?? (userId === null ? `S-${index + 1}` : `U-${userId}`);
+
+  return {
+    borrowedCount:
+      readNumber(value, [
+        "borrowedCount",
+        "borrowCount",
+        "rentalCount",
+        "useCount",
+      ]) ??
+      (userId === null ? 0 : borrowCounts.get(userId) ?? 0),
+    className: formatClassName(value),
+    deviceId,
+    id: studentCode,
+    name:
+      readString(value, ["name", "studentName", "userName", "username"]) ??
+      `사용자 ${userId ?? index + 1}`,
+    rentalPeriod:
+      readString(value, ["rentalPeriod", "borrowPeriod"]) ??
+      formatRentalPeriod(startedAt, returnedAt, status),
+    status,
+    umbrella: formatDeviceLabel(deviceId),
+    unreturnedPeriod:
+      readString(value, ["unreturnedPeriod", "overduePeriod"]) ??
+      (status === "대여 중" || status === "미반납"
+        ? formatDurationFrom(startedAt)
+        : "-"),
+    userId,
+  };
+}
+
+function extractStudents(payload: unknown, logs: UmbrellaLog[]) {
+  const latestByUser = getLatestLogsByUser(logs);
+  const borrowCounts = getBorrowCountsByUser(logs);
+
+  return readList(payload, ["students", "users", "data", "result", "content"])
+    .map((item, index) =>
+      toRentalStudent(item, index, latestByUser, borrowCounts),
+    )
+    .filter((student): student is RentalStudent => student !== null);
+}
+
+function formatUmbrellaLog(log: UmbrellaLog) {
+  const statusLabel = log.status === "BORROW" ? "대여" : "반납";
+
+  return `${formatDateTime(log.createdAt)} 사용자 ${log.userId} · ${formatDeviceLabel(
+    log.deviceId,
+  )} 우산 ${statusLabel}`;
+}
+
+function getApiMessage(payload: unknown, fallback: string) {
+  if (!isRecord(payload)) {
+    return fallback;
+  }
+
+  const message = payload.msg ?? payload.message ?? payload.error;
+
+  return typeof message === "string" && message.trim().length > 0
+    ? message
+    : fallback;
+}
+
+async function requestAdmin<T>(input: string, init?: RequestInit) {
+  const response = await fetch(input, init);
+  const contentType = response.headers.get("content-type") ?? "";
+  const payload = contentType.includes("application/json")
+    ? ((await response.json().catch(() => null)) as unknown)
+    : await response.text();
+
+  if (!response.ok) {
+    throw new Error(getApiMessage(payload, `요청 실패 (${response.status})`));
+  }
+
+  return payload as T;
 }
 
 function Logo() {
@@ -334,13 +768,17 @@ function StatCard({ stat }: { stat: Stat }) {
 }
 
 function ToolbarButton({
+  disabled,
   href,
   icon: Icon,
   label,
+  onClick,
 }: {
+  disabled?: boolean;
   href?: string;
   icon: LucideIcon;
   label: string;
+  onClick?: () => void;
 }) {
   const classes =
     "flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50";
@@ -355,7 +793,12 @@ function ToolbarButton({
   }
 
   return (
-    <button className={classes} type="button">
+    <button
+      className={`${classes} disabled:cursor-not-allowed disabled:opacity-60`}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
       <Icon size={16} aria-hidden="true" />
       <span>{label}</span>
     </button>
@@ -365,29 +808,97 @@ function ToolbarButton({
 export default function AdminDashboard() {
   const allLocked = false;
   const [activeLabel, setActiveLabel] = useState(primaryNav[0].label);
-  const [selectedId, setSelectedId] = useState(rentalStudents[0].id);
-  const [studentLocks, setStudentLocks] = useState(() => new Set(["S-2604"]));
+  const [students, setStudents] = useState(fallbackRentalStudents);
+  const [selectedId, setSelectedId] = useState(fallbackRentalStudents[0].id);
+  const [studentLocks, setStudentLocks] = useState<Set<string>>(
+    () =>
+      new Set(
+        fallbackRentalStudents
+          .filter((student) => student.status === "잠금")
+          .map((student) => student.id),
+      ),
+  );
+  const [rentalLogs, setRentalLogs] = useState<UmbrellaLog[]>([]);
+  const [localLogs, setLocalLogs] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState<
+    "student-lock" | "umbrella-lock" | "open-slot" | null
+  >(null);
+  const [apiMessage, setApiMessage] = useState("");
+  const [apiError, setApiError] = useState("");
   const [messageText, setMessageText] = useState(
     "반납 예정 시간을 확인하고 반납 요청을 진행해 주세요.",
   );
   const [messages, setMessages] = useState(initialMessages);
   const [inquiries, setInquiries] = useState(initialInquiries);
-  const [logs, setLogs] = useState(initialLogs);
   const selectedStudent = useMemo(
     () =>
-      rentalStudents.find((student) => student.id === selectedId) ??
-      rentalStudents[0],
-    [selectedId],
+      students.find((student) => student.id === selectedId) ??
+      students[0] ??
+      null,
+    [selectedId, students],
   );
-  const selectedLocked = studentLocks.has(selectedId);
+  const selectedLocked =
+    selectedStudent !== null &&
+    (studentLocks.has(selectedStudent.id) || selectedStudent.status === "잠금");
   const manualMessageLabel = operationNav[2].label;
   const isManualMessageView = activeLabel === manualMessageLabel;
-  const activeRentals = rentalStudents.filter(
+  const activeRentals = students.filter(
     (student) => student.status === "대여 중" || student.status === "미반납",
   ).length;
   const pendingInquiries = inquiries.filter(
     (inquiry) => inquiry.state !== "완료",
   ).length;
+  const displayLogs = useMemo(
+    () => [...localLogs, ...rentalLogs.map(formatUmbrellaLog)].slice(0, 10),
+    [localLogs, rentalLogs],
+  );
+
+  const loadAdminData = useCallback(async () => {
+    setIsLoading(true);
+    setApiError("");
+
+    try {
+      const [studentsPayload, logsPayload] = await Promise.all([
+        requestAdmin<unknown>("/api/admin/students"),
+        requestAdmin<unknown>("/api/admin/umbrella"),
+      ]);
+      const nextLogs = extractUmbrellaLogs(logsPayload);
+      const nextStudents = extractStudents(studentsPayload, nextLogs);
+
+      setRentalLogs(nextLogs);
+      setStudents(nextStudents);
+      setStudentLocks(
+        new Set(
+          nextStudents
+            .filter((student) => student.status === "잠금")
+            .map((student) => student.id),
+        ),
+      );
+      setSelectedId((current) =>
+        nextStudents.some((student) => student.id === current)
+          ? current
+          : nextStudents[0]?.id ?? "",
+      );
+      setApiMessage("백엔드 데이터 동기화 완료");
+    } catch (error) {
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "백엔드 데이터를 불러오지 못했습니다.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void loadAdminData();
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
+  }, [loadAdminData]);
 
   const stats: Stat[] = [
     {
@@ -427,29 +938,104 @@ export default function AdminDashboard() {
   ];
 
   const pushLog = (label: string) => {
-    setLogs((current) => [`${nowLabel()} ${label}`, ...current].slice(0, 7));
+    setLocalLogs((current) => [`${nowLabel()} ${label}`, ...current].slice(0, 7));
   };
 
-  const toggleStudentLock = () => {
-    setStudentLocks((current) => {
-      const next = new Set(current);
+  const lockSelectedUser = async () => {
+    if (!selectedStudent || selectedStudent.userId === null || selectedLocked) {
+      return;
+    }
 
-      if (next.has(selectedId)) {
-        next.delete(selectedId);
-        pushLog(`${selectedStudent.name} 학생 지정 잠금 해제`);
-      } else {
-        next.add(selectedId);
-        pushLog(`${selectedStudent.name} 학생 지정 잠금`);
-      }
+    setPendingAction("student-lock");
+    setApiError("");
 
-      return next;
-    });
+    try {
+      const result = await requestAdmin<ApiCommandResponse>(
+        "/api/admin/lock/user",
+        {
+          body: JSON.stringify({ userId: selectedStudent.userId }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      );
+
+      setStudentLocks((current) => new Set(current).add(selectedStudent.id));
+      setStudents((current) =>
+        current.map((student) =>
+          student.id === selectedStudent.id
+            ? { ...student, status: "잠금" }
+            : student,
+        ),
+      );
+      setApiMessage(getApiMessage(result, "대여 금지 처리 완료"));
+      pushLog(`${selectedStudent.name} 대여 금지 처리`);
+    } catch (error) {
+      setApiError(
+        error instanceof Error ? error.message : "대여 금지 처리 실패",
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const lockSelectedUmbrella = async () => {
+    if (!selectedStudent || selectedStudent.deviceId === null) {
+      setApiError("선택된 학생의 우산 정보가 없습니다.");
+      return;
+    }
+
+    setPendingAction("umbrella-lock");
+    setApiError("");
+
+    try {
+      const result = await requestAdmin<ApiCommandResponse>(
+        "/api/admin/lock/umbrella",
+        {
+          body: JSON.stringify({ deviceId: selectedStudent.deviceId }),
+          headers: { "Content-Type": "application/json" },
+          method: "PATCH",
+        },
+      );
+
+      setApiMessage(getApiMessage(result, "우산 꽂이 잠금 완료"));
+      pushLog(`${selectedStudent.umbrella} 우산 꽂이 잠금`);
+    } catch (error) {
+      setApiError(
+        error instanceof Error ? error.message : "우산 꽂이 잠금 실패",
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const openSelectedSlot = async () => {
+    if (!selectedStudent || selectedStudent.deviceId === null) {
+      setApiError("선택된 학생의 우산 정보가 없습니다.");
+      return;
+    }
+
+    setPendingAction("open-slot");
+    setApiError("");
+
+    try {
+      const result = await requestAdmin<ApiCommandResponse>(
+        `/api/admin/open?deviceId=${selectedStudent.deviceId}`,
+        { method: "POST" },
+      );
+
+      setApiMessage(getApiMessage(result, "명령 접수됨"));
+      pushLog(`${selectedStudent.umbrella} 슬롯 수동 열기`);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : "슬롯 열기 실패");
+    } finally {
+      setPendingAction(null);
+    }
   };
 
   const sendMessage = () => {
     const body = messageText.trim();
 
-    if (!body) {
+    if (!body || !selectedStudent) {
       return;
     }
 
@@ -495,7 +1081,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-sm font-semibold text-sky-700">
-                  2026년 7월 7일 운영 상태
+                  실시간 운영 상태
                 </p>
                 <h1 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
                   {isManualMessageView ? "수동 메시지" : "우산 대여 보안 관리 대시보드"}
@@ -503,6 +1089,12 @@ export default function AdminDashboard() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <ToolbarButton
+                  disabled={isLoading}
+                  icon={RefreshCw}
+                  label={isLoading ? "동기화 중" : "학생 동기화"}
+                  onClick={loadAdminData}
+                />
                 <ToolbarButton href="/" label="학생 화면" icon={Umbrella} />
                 <button
                   className="hidden size-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-sky-50 lg:flex"
@@ -513,6 +1105,18 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+
+            {(apiError || apiMessage) && (
+              <div
+                className={
+                  apiError
+                    ? "mt-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700"
+                    : "mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700"
+                }
+              >
+                {apiError || apiMessage}
+              </div>
+            )}
 
             {!isManualMessageView && (
               <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -545,19 +1149,36 @@ export default function AdminDashboard() {
                   </span>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-5 grid gap-3 lg:grid-cols-3">
                   <ControlButton
                     active={selectedLocked}
+                    busy={pendingAction === "student-lock"}
+                    disabled={
+                      selectedLocked ||
+                      !selectedStudent ||
+                      selectedStudent.userId === null
+                    }
                     icon={<UserLock size={18} />}
-                    label={selectedLocked ? "학생 잠금 해제" : "학생 지정 잠금"}
-                    onClick={toggleStudentLock}
+                    label={selectedLocked ? "이미 대여 금지" : "선택 유저 대여 금지"}
+                    onClick={lockSelectedUser}
                   />
                   <ControlButton
+                    busy={pendingAction === "umbrella-lock"}
+                    disabled={
+                      !selectedStudent || selectedStudent.deviceId === null
+                    }
+                    icon={<Lock size={18} />}
+                    label="선택 우산 꽂이 잠금"
+                    onClick={lockSelectedUmbrella}
+                  />
+                  <ControlButton
+                    busy={pendingAction === "open-slot"}
+                    disabled={
+                      !selectedStudent || selectedStudent.deviceId === null
+                    }
                     icon={<LockOpen size={18} />}
                     label="선택 슬롯 수동 열기"
-                    onClick={() =>
-                      pushLog(`${selectedStudent.umbrella} 슬롯 수동 열기`)
-                    }
+                    onClick={openSelectedSlot}
                   />
                 </div>
 
@@ -570,29 +1191,38 @@ export default function AdminDashboard() {
                   </label>
                   <select
                     id="student-select"
+                    disabled={students.length === 0}
                     value={selectedId}
                     onChange={(event) => setSelectedId(event.target.value)}
-                    className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                    className="mt-2 h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 disabled:cursor-not-allowed disabled:bg-slate-100"
                   >
-                    {rentalStudents.map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.name} · {student.className} · {student.id}
-                      </option>
-                    ))}
+                    {students.length === 0 ? (
+                      <option value="">동기화된 학생 없음</option>
+                    ) : (
+                      students.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.name} · {student.className} · {student.id}
+                        </option>
+                      ))
+                    )}
                   </select>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     <MiniMetric
                       label="대여 횟수"
-                      value={`${selectedStudent.borrowedCount}회`}
+                      value={
+                        selectedStudent
+                          ? `${selectedStudent.borrowedCount}회`
+                          : "-"
+                      }
                     />
                     <MiniMetric
                       label="대여 기간"
-                      value={selectedStudent.rentalPeriod}
+                      value={selectedStudent?.rentalPeriod ?? "-"}
                     />
                     <MiniMetric
                       label="미반납 기간"
-                      value={selectedStudent.unreturnedPeriod}
+                      value={selectedStudent?.unreturnedPeriod ?? "-"}
                     />
                   </div>
                 </div>
@@ -623,11 +1253,15 @@ export default function AdminDashboard() {
 
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm font-semibold text-slate-500">
-                    대상: {selectedStudent.name} · {selectedStudent.id}
+                    대상:{" "}
+                    {selectedStudent
+                      ? `${selectedStudent.name} · ${selectedStudent.id}`
+                      : "선택된 학생 없음"}
                   </p>
                   <button
                     type="button"
                     onClick={sendMessage}
+                    disabled={!selectedStudent}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-sky-500 px-4 text-sm font-bold text-white transition hover:bg-sky-600"
                   >
                     <Send size={17} aria-hidden="true" />
@@ -690,7 +1324,17 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {rentalStudents.map((student) => {
+                      {students.length === 0 && (
+                        <tr>
+                          <td
+                            className="px-5 py-8 text-center text-sm font-semibold text-slate-500"
+                            colSpan={6}
+                          >
+                            동기화된 학생 정보가 없습니다.
+                          </td>
+                        </tr>
+                      )}
+                      {students.map((student) => {
                         const locked = studentLocks.has(student.id);
                         const shownStatus = locked ? "잠금" : student.status;
 
@@ -739,9 +1383,14 @@ export default function AdminDashboard() {
               <div className="grid gap-6">
                 <Panel title="로그 확인" eyebrow="운영 기록" icon={<History size={19} />}>
                   <div className="space-y-3">
-                    {logs.map((log) => (
+                    {displayLogs.length === 0 && (
+                      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-500">
+                        표시할 대여/반납 로그가 없습니다.
+                      </div>
+                    )}
+                    {displayLogs.map((log, index) => (
                       <div
-                        key={log}
+                        key={`${index}-${log}`}
                         className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700"
                       >
                         {log}
@@ -794,27 +1443,34 @@ export default function AdminDashboard() {
 
 function ControlButton({
   active,
+  busy,
+  disabled,
   icon,
   label,
   onClick,
 }: {
   active?: boolean;
+  busy?: boolean;
+  disabled?: boolean;
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
 }) {
+  const buttonDisabled = disabled || busy;
+
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={buttonDisabled}
       className={
         active
-          ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-sky-200 bg-sky-100 px-4 text-sm font-bold text-sky-700 transition hover:bg-sky-100"
-          : "inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 transition hover:bg-sky-50"
+          ? "inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-sky-200 bg-sky-100 px-4 text-sm font-bold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+          : "inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
       }
     >
       {icon}
-      {label}
+      {busy ? "처리 중" : label}
     </button>
   );
 }
